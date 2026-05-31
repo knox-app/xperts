@@ -105,7 +105,7 @@
                 <button onclick="handleGoogleLogin()">Login with Google</button>
             </div>
 
-            <!-- STEP 2: SETUP STREAM (Logged In) -->
+            <!-- STEP 2: SETUP STREAM -->
             <div id="setup-section" style="display: none;">
                 <h2>Start a New Live Stream</h2>
                 <div class="input-group">
@@ -126,7 +126,7 @@
             <!-- STEP 3: ACTIVE STREAM VIEW -->
             <div id="active-section" style="display: none;">
                 <h2 id="active-title">Live Class</h2>
-                <p style="color: var(--accent-color); font-weight: bold;">● Broadcasting to YouTube...</p>
+                <p style="color: var(--accent-color); font-weight: bold;">● Broadcasting to YouTube... (It may take 10-15 seconds to show up on YT)</p>
                 <div id="jitsi-container"></div>
                 <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 20px;">End Stream</button>
             </div>
@@ -135,9 +135,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURATION (Credentials Pre-filled)
-        // ==========================================
         const CLIENT_ID = '878851646059-df1b22bspju27a2gjb4o9n4mrtpo7kkr.apps.googleusercontent.com';
         
         const firebaseConfig = {
@@ -151,7 +148,6 @@
             measurementId: "G-6ZP1FPMKSJ"
         };
 
-        // Initialize Firebase Realtime Database
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -175,7 +171,6 @@
                 }
             });
 
-            // Auto login if token exists
             if (accessToken) {
                 showSetupSection();
             }
@@ -190,9 +185,6 @@
             document.getElementById('setup-section').style.display = 'block';
         }
 
-        // ==========================================
-        // AUTO STREAMING LOGIC
-        // ==========================================
         async function startDirectStream() {
             const title = document.getElementById('stream-title').value;
             const visibility = document.getElementById('stream-visibility').value;
@@ -203,13 +195,17 @@
             alert("Initializing Stream. Please wait...");
 
             try {
-                // 1. Create Broadcast on YouTube
-                const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status', {
+                // 1. Create Broadcast with AutoStart and AutoStop enabled
+                const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status,contentDetails', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         snippet: { title: title, scheduledStartTime: new Date().toISOString() },
-                        status: { privacyStatus: visibility, selfDeclaredMadeForKids: false }
+                        status: { privacyStatus: visibility, selfDeclaredMadeForKids: false },
+                        contentDetails: {
+                            enableAutoStart: true,  // Auto Go-Live when data starts flowing
+                            enableAutoStop: true    // Auto End-Live when Jitsi stops
+                        }
                     })
                 });
                 const broadcastData = await broadcastRes.json();
@@ -249,7 +245,7 @@
 
             } catch (err) {
                 console.error(err);
-                alert("Auth Error or Session Expired. Reconnecting...");
+                alert("Session Expired or Connection Error. Reconnecting...");
                 localStorage.removeItem('yt_access_token');
                 location.reload();
             }
@@ -271,45 +267,36 @@
 
             jitsiAPI = new JitsiMeetExternalAPI(domain, options);
 
-            // Trigger stream automatically when joined
             jitsiAPI.addEventListener('videoConferenceJoined', () => {
                 setTimeout(() => {
+                    // Send Jitsi streaming bytes to YouTube RTMP endpoint
                     jitsiAPI.executeCommand('startRecording', {
                         mode: 'stream',
                         rtmpStreamKey: streamKey
                     });
-                }, 3000); 
+                }, 4000); // 4 seconds buffer time
             });
         }
 
         async function stopDirectStream() {
             if(!confirm("Are you sure you want to end the stream?")) return;
 
-            // Stop Jitsi & RTMP transmission
             if(jitsiAPI) {
                 jitsiAPI.executeCommand('stopRecording', { mode: 'stream' });
                 jitsiAPI.dispose();
             }
 
-            // Close YouTube Broadcast
-            try {
-                await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id=${currentBroadcastId}&part=id,status`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-            } catch (e) { console.log(e); }
-
-            // Update Realtime Database status to 'recorded'
+            // Update Database
             if(currentDbKey) {
                 await db.ref('classes/' + currentDbKey).update({
                     status: "recorded"
                 });
             }
 
-            alert("Broadcast Finished!");
+            alert("Broadcast Finished! YouTube will process and save the recording.");
             document.getElementById('active-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'block';
         }
     </script>
 </body>
-</html>
+    </html>
