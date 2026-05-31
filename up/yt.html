@@ -1,164 +1,364 @@
-<!DOCTYPE html>
-<html>
+ <!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YouTube Uploader</title>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<style>
-body{
-    font-family:Inter,sans-serif;
-    max-width:700px;
-    margin:20px auto;
-    padding:20px;
-}
-input,textarea,select,button{
-    width:100%;
-    padding:10px;
-    margin:8px 0;
-}
-#progress{
-    width:100%;
-    height:20px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Manager Pro</title>
+    <!-- Google Identity Services for OAuth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #ff0000;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            width: 100%;
+            background-color: var(--surface-color);
+            padding: 15px 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        nav {
+            display: none; /* Hidden until logged in */
+            gap: 15px;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #cc0000; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        .section {
+            display: none; /* Hidden by default */
+            background-color: var(--surface-color);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            margin-top: 40px;
+            box-sizing: border-box;
+        }
+        .active-section { display: block; }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        input, select {
+            padding: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        video {
+            width: 100%;
+            background-color: black;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        #status-msg { margin-top: 15px; font-size: 0.9em; color: #4caf50; }
+        .logout-btn { background-color: transparent; border: 1px solid white; }
+    </style>
 </head>
 <body>
 
-<h2>YouTube Video Uploader</h2>
+    <header>
+        <h2>YT Manager Pro</h2>
+        <nav id="nav-menu">
+            <button onclick="switchTab('upload-section')">Upload Video</button>
+            <button onclick="switchTab('live-section')">Live Stream</button>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </nav>
+    </header>
 
-<button id="loginBtn">Login with Google</button>
+    <!-- 1. LOGIN SECTION -->
+    <div id="login-section" class="section active-section">
+        <h2>Welcome</h2>
+        <p>Please login with Google to manage your YouTube channel.</p>
+        <button onclick="handleLogin()">Login with Google</button>
+    </div>
 
-<div id="uploader" style="display:none">
+    <!-- 2. UPLOAD SECTION -->
+    <div id="upload-section" class="section">
+        <h2>Upload a Video</h2>
+        <div class="input-group">
+            <label>Video File</label>
+            <input type="file" id="video-file" accept="video/*">
+        </div>
+        <div class="input-group">
+            <label>Video Title</label>
+            <input type="text" id="video-title" placeholder="Enter video title...">
+        </div>
+        <div class="input-group">
+            <label>Visibility</label>
+            <select id="video-visibility">
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+            </select>
+        </div>
+        <button id="upload-btn" onclick="uploadVideo()">Upload to YouTube</button>
+        <div id="upload-status" style="margin-top: 15px; font-size: 0.9em; color: #4caf50;"></div>
+    </div>
 
-<input id="title" placeholder="Video Title">
+    <!-- 3. LIVE STREAM SECTION -->
+    <div id="live-section" class="section">
+        <h2>Go Live</h2>
+        <video id="webcam-preview" autoplay playsinline muted></video>
+        <button onclick="flipCamera()" style="margin-bottom: 15px; background: #333;">Flip Camera (Front/Back)</button>
+        
+        <div class="input-group">
+            <label>Stream Title</label>
+            <input type="text" id="live-title" placeholder="My Awesome Live Stream">
+        </div>
+        <div class="input-group">
+            <label>Visibility</label>
+            <select id="live-visibility">
+                <option value="unlisted" selected>Unlisted</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+            </select>
+        </div>
+        <button id="create-live-btn" onclick="setupLiveStream()">1. Create Live Broadcast</button>
+        <button id="go-live-btn" onclick="goLive()" disabled style="background: green;">2. Go Live</button>
+        <button id="stop-live-btn" onclick="stopLive()" disabled>3. End Live</button>
+        <div id="live-status" style="margin-top: 15px; font-size: 0.9em; color: #4caf50;"></div>
+    </div>
 
-<textarea id="description" placeholder="Description"></textarea>
+    <script>
+        // ==========================================
+        // CONFIGURATION - CLIENT ID ADDED HERE
+        // ==========================================
+        const CLIENT_ID = '878851646059-df1b22bspju27a2gjb4o9n4mrtpo7kkr.apps.googleusercontent.com'; 
+        const SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube';
 
-<select id="privacy">
-    <option value="public">Public</option>
-    <option value="unlisted">Unlisted</option>
-    <option value="private">Private</option>
-</select>
+        let tokenClient;
+        let accessToken = localStorage.getItem('yt_access_token');
+        let currentFacingMode = 'user'; // 'user' for front cam, 'environment' for back cam
+        let currentBroadcastId = null;
 
-<input type="file" id="videoFile" accept="video/*">
+        // Initialize Google Identity Services
+        window.onload = function () {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        accessToken = tokenResponse.access_token;
+                        localStorage.setItem('yt_access_token', accessToken);
+                        showApp();
+                    }
+                }
+            });
 
-<button id="uploadBtn">Upload Video</button>
+            // Check if user is already logged in
+            if (accessToken) {
+                showApp();
+            }
+        };
 
-<br><br>
+        // ==========================================
+        // 1. AUTHENTICATION LOGIC
+        // ==========================================
+        function handleLogin() {
+            tokenClient.requestAccessToken();
+        }
 
-<progress id="progress" value="0" max="100"></progress>
+        function logout() {
+            localStorage.removeItem('yt_access_token');
+            accessToken = null;
+            document.getElementById('nav-menu').style.display = 'none';
+            switchTab('login-section');
+        }
 
-<p id="status"></p>
+        function showApp() {
+            document.getElementById('nav-menu').style.display = 'flex';
+            switchTab('upload-section');
+        }
 
-</div>
+        function switchTab(tabId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById(tabId).classList.add('active-section');
+            if(tabId === 'live-section') startCamera();
+        }
 
-<script>
+        async function apiFetch(url, options = {}) {
+            options.headers = options.headers || {};
+            options.headers['Authorization'] = `Bearer ${accessToken}`;
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                logout();
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
 
-const CLIENT_ID = "878851646059-67inc8f539i7n1a2vo1qtga3dl6gagn9.apps.googleusercontent.com";
+        // ==========================================
+        // 2. VIDEO UPLOAD LOGIC
+        // ==========================================
+        async function uploadVideo() {
+            const fileInput = document.getElementById('video-file').files[0];
+            const title = document.getElementById('video-title').value;
+            const visibility = document.getElementById('video-visibility').value;
+            const statusDiv = document.getElementById('upload-status');
 
-const SCOPES =
-"https://www.googleapis.com/auth/youtube.upload";
+            if (!fileInput || !title) return alert("Please provide a file and a title.");
 
-let accessToken = "";
+            statusDiv.innerHTML = "Uploading... Please wait (this may take a while depending on file size).";
+            document.getElementById('upload-btn').disabled = true;
 
-document.getElementById("loginBtn").onclick = () => {
+            const metadata = {
+                snippet: { title: title, description: "Uploaded via YT Manager Pro" },
+                status: { privacyStatus: visibility }
+            };
 
-google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (tokenResponse) => {
+            const formData = new FormData();
+            formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            formData.append('file', fileInput);
 
-        accessToken = tokenResponse.access_token;
+            try {
+                const res = await apiFetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.id) {
+                    statusDiv.innerHTML = `Success! Video ID: <a href="https://youtu.be/${data.id}" target="_blank">${data.id}</a>`;
+                } else {
+                    statusDiv.innerHTML = "Upload failed: " + data.error.message;
+                }
+            } catch (err) {
+                statusDiv.innerHTML = "Error uploading video.";
+            }
+            document.getElementById('upload-btn').disabled = false;
+        }
 
-        document.getElementById("uploader").style.display = "block";
+        // ==========================================
+        // 3. LIVE STREAM LOGIC
+        // ==========================================
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode }, 
+                    audio: true
+                });
+                document.getElementById('webcam-preview').srcObject = stream;
+            } catch (err) {
+                console.error("Camera access denied or unavailable", err);
+            }
+        }
 
-        document.getElementById("status").innerText =
-        "Logged In";
-    }
-}).requestAccessToken();
+        function flipCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        }
 
-};
+        async function setupLiveStream() {
+            const title = document.getElementById('live-title').value || "Quick Live Stream";
+            const visibility = document.getElementById('live-visibility').value;
+            const statusDiv = document.getElementById('live-status');
+            
+            document.getElementById('create-live-btn').disabled = true;
+            statusDiv.innerHTML = "Creating Broadcast and Stream on YouTube...";
 
-document.getElementById("uploadBtn").onclick = async () => {
+            try {
+                // Step 1: Create Broadcast
+                const broadcastRes = await apiFetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        snippet: { title: title, scheduledStartTime: new Date().toISOString() },
+                        status: { privacyStatus: visibility, selfDeclaredMadeForKids: false }
+                    })
+                });
+                const broadcastData = await broadcastRes.json();
+                currentBroadcastId = broadcastData.id;
 
-const file =
-document.getElementById("videoFile").files[0];
+                // Step 2: Create Video Stream (RTMP)
+                const streamRes = await apiFetch('https://www.googleapis.com/youtube/v3/liveStreams?part=snippet,cdn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        snippet: { title: title + " stream" },
+                        cdn: { frameRate: "variable", ingestionType: "rtmp", resolution: "variable" }
+                    })
+                });
+                const streamData = await streamRes.json();
+                const streamId = streamData.id;
 
-if(!file){
-    alert("Select video");
-    return;
-}
+                // Step 3: Bind Broadcast to Stream
+                await apiFetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id=${currentBroadcastId}&part=id,contentDetails&streamId=${streamId}`, {
+                    method: 'POST'
+                });
 
-const metadata = {
-    snippet:{
-        title:document.getElementById("title").value,
-        description:
-        document.getElementById("description").value
-    },
-    status:{
-        privacyStatus:
-        document.getElementById("privacy").value
-    }
-};
+                statusDiv.innerHTML = `Broadcast created! <br><b>NOTE:</b> As mentioned, your browser cannot send video data directly to YouTube. You must send video to your RTMP key using OBS Studio to actually go live.`;
+                document.getElementById('go-live-btn').disabled = false;
 
-const initUpload = await fetch(
-"https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-{
-    method:"POST",
-    headers:{
-        Authorization:`Bearer ${accessToken}`,
-        "Content-Type":"application/json"
-    },
-    body:JSON.stringify(metadata)
-});
+            } catch (err) {
+                statusDiv.innerHTML = "Error creating stream.";
+                document.getElementById('create-live-btn').disabled = false;
+            }
+        }
 
-const uploadUrl =
-initUpload.headers.get("Location");
+        async function goLive() {
+            const statusDiv = document.getElementById('live-status');
+            try {
+                const res = await apiFetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=live&id=${currentBroadcastId}&part=id,status`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                
+                if(data.error) {
+                    alert("YouTube Error: " + data.error.message + "\n\n(Reminder: YouTube requires you to send video to their RTMP server via OBS/software BEFORE you can transition to live).");
+                } else {
+                    statusDiv.innerHTML = "You are now LIVE on YouTube!";
+                    document.getElementById('go-live-btn').disabled = true;
+                    document.getElementById('stop-live-btn').disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
-const xhr = new XMLHttpRequest();
-
-xhr.open("PUT", uploadUrl, true);
-
-xhr.upload.onprogress = (e)=>{
-    if(e.lengthComputable){
-        const percent =
-        (e.loaded/e.total)*100;
-
-        document.getElementById("progress")
-        .value = percent;
-    }
-};
-
-xhr.onload = ()=>{
-
-    if(xhr.status === 200 ||
-       xhr.status === 201){
-
-        const res =
-        JSON.parse(xhr.responseText);
-
-        document.getElementById("status")
-        .innerHTML =
-        `Uploaded! Video ID: ${res.id}
-        <br>
-        https://youtube.com/watch?v=${res.id}`;
-
-    }else{
-
-        document.getElementById("status")
-        .innerText = "Upload Failed";
-
-    }
-};
-
-xhr.send(file);
-
-};
-
-</script>
-
+        async function stopLive() {
+            const statusDiv = document.getElementById('live-status');
+            try {
+                await apiFetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id=${currentBroadcastId}&part=id,status`, {
+                    method: 'POST'
+                });
+                statusDiv.innerHTML = "Live stream ended.";
+                document.getElementById('stop-live-btn').disabled = true;
+                document.getElementById('create-live-btn').disabled = false;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
 </body>
 </html>
