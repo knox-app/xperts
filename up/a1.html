@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamStudio Pro</title>
+    <title>StreamStudio Pro (OBS Edition)</title>
     
-    <!-- CDNs: Google OAuth, Jitsi, and Firebase Realtime Database -->
+    <!-- CDNs: Google OAuth and Firebase Realtime Database -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://meet.jit.si/external_api.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -21,10 +20,11 @@
             --accent-glow: rgba(255, 0, 127, 0.4);
             --text-color: #f1f1f6;
             --text-secondary: #8e8ea8;
+            --box-border: rgba(255, 255, 255, 0.08);
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg-gradient);
             color: var(--text-color);
             margin: 0;
@@ -59,14 +59,14 @@
 
         .container {
             width: 92%;
-            max-width: 850px;
+            max-width: 750px;
             margin: 30px 0;
         }
 
         .box {
             background: var(--card-bg);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--box-border);
             padding: 35px 25px;
             border-radius: 20px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
@@ -88,7 +88,6 @@
             line-height: 1.5;
         }
 
-        /* Modern Gradient Buttons */
         button {
             background: linear-gradient(45deg, #00f2fe, #4facfe);
             color: #09090e;
@@ -121,7 +120,7 @@
             box-shadow: 0 6px 20px var(--accent-glow);
         }
 
-        /* Form Styling */
+        /* Form & Key Display Styling */
         .input-group {
             margin-bottom: 25px;
             text-align: left;
@@ -154,7 +153,51 @@
             box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
         }
 
-        /* Glowing Live Dot */
+        /* Copy Key Layout */
+        .key-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+        }
+
+        .key-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
+
+        .key-row input {
+            margin-top: 0;
+            flex-grow: 1;
+            background: #14141f;
+            border: 1px solid #2e2e42;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #00f2fe;
+        }
+
+        .key-row button {
+            padding: 12px 18px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .instructions {
+            background: rgba(0, 242, 254, 0.05);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #d1d1e0;
+        }
+
         .pulse-dot {
             display: inline-block;
             width: 10px;
@@ -171,18 +214,6 @@
             50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 15px var(--accent-color); }
             100% { transform: scale(0.9); opacity: 0.7; }
         }
-
-        /* Embedded Jitsi Box */
-        #jitsi-container {
-            width: 100%;
-            height: 520px;
-            background-color: #050508;
-            border-radius: 16px;
-            overflow: hidden;
-            margin-top: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-        }
     </style>
 </head>
 <body>
@@ -197,14 +228,14 @@
             <!-- STEP 1: GOOGLE AUTH -->
             <div id="login-section">
                 <h3>Authorize Streaming</h3>
-                <p>Connect your YouTube account to load stream tokens directly inside the browser studio.</p>
+                <p>Connect your YouTube account to generate streaming keys for OBS Studio.</p>
                 <button onclick="handleGoogleLogin()">Log In with Google</button>
             </div>
 
             <!-- STEP 2: SETUP PANEL -->
             <div id="setup-section" style="display: none;">
                 <h3>Stream Settings</h3>
-                <p>Adjust your title and safety settings before broadcasting.</p>
+                <p>Set up your broadcast metadata before streaming from OBS.</p>
                 <div class="input-group">
                     <label>Broadcast Title</label>
                     <input type="text" id="stream-title" placeholder="e.g. Science Revision Live Class">
@@ -217,17 +248,45 @@
                         <option value="private">Private (Only you can watch)</option>
                     </select>
                 </div>
-                <button onclick="startDirectStream()">Go Live Now</button>
+                <button onclick="startDirectStream()">Generate Stream Keys</button>
             </div>
 
-            <!-- STEP 3: RUNNING STREAM -->
+            <!-- STEP 3: OBS COPY KEYS VIEW -->
             <div id="active-section" style="display: none;">
-                <h3 id="active-title" style="color: var(--primary-color);">Broadcasting Event</h3>
-                <p style="color: var(--accent-color); font-weight: 700; display: flex; align-items: center; justify-content: center;">
-                    <span class="pulse-dot"></span> LIVE BROADCAST ACTIVE (Wait 10-15s for YouTube synchronization)
+                <h3 id="active-title" style="color: var(--primary-color);">Broadcast Keys Generated</h3>
+                
+                <div class="instructions">
+                    <strong>How to stream using OBS Studio:</strong><br>
+                    1. Open OBS Studio and go to <strong>Settings -> Stream</strong>.<br>
+                    2. Select Service as <strong>"Custom..."</strong>.<br>
+                    3. Copy and paste the Server URL and Stream Key given below.<br>
+                    4. Click <strong>"Start Streaming"</strong> inside OBS. YouTube will automatically go live.
+                </div>
+
+                <div class="key-container">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>1. Stream Server URL</label>
+                        <div class="key-row">
+                            <input type="text" id="server-url-field" readonly value="rtmp://a.rtmp.youtube.com/live2">
+                            <button onclick="copyToClipboard('server-url-field')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>2. Stream Key</label>
+                        <div class="key-row">
+                            <input type="password" id="stream-key-field" readonly value="">
+                            <button onclick="toggleKeyVisibility()" style="background: #333; color: white;">Show</button>
+                            <button onclick="copyToClipboard('stream-key-field')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="color: var(--accent-color); font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 25px;">
+                    <span class="pulse-dot"></span> WAITING FOR OBS STREAM CONNECTION...
                 </p>
-                <div id="jitsi-container"></div>
-                <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 25px;">Stop Broadcast</button>
+                
+                <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 20px; width: 100%;">Finish & Close Class</button>
             </div>
         </div>
 
@@ -255,7 +314,6 @@
         let accessToken = localStorage.getItem('yt_access_token');
         let currentBroadcastId = null;
         let currentStreamId = null;
-        let jitsiAPI = null;
         let currentDbKey = null;
 
         window.onload = function() {
@@ -292,10 +350,10 @@
             if(!title) return alert("Please specify a stream title.");
 
             document.getElementById('setup-section').style.display = 'none';
-            alert("Creating secure stream connection. Please hold...");
+            alert("Creating stream connection keys. Please wait...");
 
             try {
-                // 1. Create broadcast on YT (Set to Auto Start/Stop)
+                // 1. Create Broadcast on YouTube with Auto Start/Stop enabled
                 const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status,contentDetails', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -303,8 +361,8 @@
                         snippet: { title: title, scheduledStartTime: new Date().toISOString() },
                         status: { privacyStatus: visibility, selfDeclaredMadeForKids: false },
                         contentDetails: {
-                            enableAutoStart: true,
-                            enableAutoStop: true
+                            enableAutoStart: true, // Automatically goes live when OBS streams
+                            enableAutoStop: true   // Automatically ends when OBS stops
                         }
                     })
                 });
@@ -322,9 +380,11 @@
                 });
                 const streamData = await streamRes.json();
                 currentStreamId = streamData.id;
+                
                 const streamKey = streamData.cdn.ingestionInfo.streamName;
+                const rtmpServerUrl = streamData.cdn.ingestionInfo.rtmpServerUrl;
 
-                // 3. Link Stream to Broadcast
+                // 3. Bind Stream to Broadcast
                 await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id=${currentBroadcastId}&part=id,contentDetails&streamId=${currentStreamId}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -340,8 +400,8 @@
                     date: new Date().toLocaleDateString()
                 });
 
-                // 5. Run Jitsi Frame
-                runJitsiIframe(title, streamKey);
+                // 5. Load Keys on Screen for Teacher
+                showKeyPanel(rtmpServerUrl, streamKey, title);
 
             } catch (err) {
                 console.error(err);
@@ -351,54 +411,53 @@
             }
         }
 
-        function runJitsiIframe(title, streamKey) {
+        function showKeyPanel(serverUrl, streamKey, title) {
             document.getElementById('active-title').innerText = title;
+            document.getElementById('server-url-field').value = serverUrl;
+            document.getElementById('stream-key-field').value = streamKey;
+            
             document.getElementById('active-section').style.display = 'block';
+        }
 
-            const domain = "meet.jit.si";
-            const options = {
-                roomName: "DirectLiveHub_" + Math.random().toString(36).substring(7),
-                width: "100%",
-                height: 520,
-                parentNode: document.querySelector('#jitsi-container'),
-                
-                // MOBILE DEEP LINKING BYPASS ENABLED
-                configOverwrite: { 
-                    startWithAudioMuted: false,
-                    disableDeepLinking: true // Bypasses mobile landing app screen
-                },
-                
-                interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'hangup'] }
-            };
+        // Copy Feature
+        function copyToClipboard(fieldId) {
+            const copyText = document.getElementById(fieldId);
+            const originalType = copyText.type;
+            
+            // Temporarily reveal password field to copy its content
+            if (originalType === "password") {
+                copyText.type = "text";
+            }
+            
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            
+            copyText.type = originalType; // Restore password field mask
+            alert("Copied to Clipboard!");
+        }
 
-            jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-
-            jitsiAPI.addEventListener('videoConferenceJoined', () => {
-                setTimeout(() => {
-                    // Send Jitsi Video feed directly to YouTube RTMP Key
-                    jitsiAPI.executeCommand('startRecording', {
-                        mode: 'stream',
-                        rtmpStreamKey: streamKey
-                    });
-                }, 4000); 
-            });
+        // Toggle Key Visibility (Show/Hide)
+        function toggleKeyVisibility() {
+            const field = document.getElementById('stream-key-field');
+            if (field.type === "password") {
+                field.type = "text";
+            } else {
+                field.type = "password";
+            }
         }
 
         async function stopDirectStream() {
-            if(!confirm("Are you sure you want to end this live broadcast?")) return;
+            if(!confirm("Are you sure you want to close this class? Make sure you have stopped streaming in OBS.")) return;
 
-            if(jitsiAPI) {
-                jitsiAPI.executeCommand('stopRecording', { mode: 'stream' });
-                jitsiAPI.dispose();
-            }
-
+            // Update Database status to recorded
             if(currentDbKey) {
                 await db.ref('classes/' + currentDbKey).update({
                     status: "recorded"
                 });
             }
 
-            alert("Broadcast concluded successfully!");
+            alert("Class session closed!");
             document.getElementById('active-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'block';
         }
