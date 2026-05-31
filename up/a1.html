@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direct Live Stream Studio</title>
+    <title>StreamStudio Pro</title>
     
-    <!-- CDNs: Google OAuth, Jitsi, and Firebase (Realtime Database Compat) -->
+    <!-- CDNs: Google OAuth, Jitsi, and Firebase Realtime Database -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://meet.jit.si/external_api.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -13,15 +13,19 @@
 
     <style>
         :root {
-            --bg-color: #0f0f15;
-            --card-color: #1a1a24;
-            --primary-color: #00e5ff;
-            --text-color: #ffffff;
-            --accent-color: #ff0055;
+            --bg-gradient: linear-gradient(135deg, #09090e 0%, #12121c 100%);
+            --card-bg: rgba(26, 26, 38, 0.7);
+            --primary-color: #00f2fe;
+            --primary-glow: rgba(0, 242, 254, 0.4);
+            --accent-color: #ff007f;
+            --accent-glow: rgba(255, 0, 127, 0.4);
+            --text-color: #f1f1f6;
+            --text-secondary: #8e8ea8;
         }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
             color: var(--text-color);
             margin: 0;
             padding: 0;
@@ -29,106 +33,201 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
+
         header {
             width: 100%;
-            background-color: var(--card-color);
-            padding: 15px 30px;
+            background: rgba(18, 18, 28, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 18px 30px;
             display: flex;
             justify-content: center;
             box-sizing: border-box;
-            border-bottom: 2px solid #252538;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
+
+        header h2 {
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .container {
-            width: 90%;
-            max-width: 800px;
-            margin-top: 40px;
+            width: 92%;
+            max-width: 850px;
+            margin: 30px 0;
         }
+
         .box {
-            background-color: var(--card-color);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 35px 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             text-align: center;
+            box-sizing: border-box;
         }
+
+        h3 {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        /* Modern Gradient Buttons */
         button {
-            background-color: var(--primary-color);
-            color: #000;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            color: #09090e;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
             font-size: 16px;
-            transition: all 0.2s;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            transition: all 0.3s ease;
         }
-        button:hover { opacity: 0.9; transform: scale(1.02); }
-        .btn-danger { background-color: var(--accent-color); color: white; }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff0844, #ffb199);
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        /* Form Styling */
         .input-group {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 25px;
             text-align: left;
         }
-        input, select {
-            padding: 12px;
-            background-color: #252535;
-            border: 1px solid #3e3e5a;
-            color: white;
-            border-radius: 6px;
-            margin-top: 8px;
-            font-size: 16px;
+
+        .input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(37, 37, 53, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-color);
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+        }
+
+        /* Glowing Live Dot */
+        .pulse-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--accent-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 15px var(--accent-color); }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        /* Embedded Jitsi Box */
         #jitsi-container {
             width: 100%;
-            height: 500px;
-            background-color: #000;
-            border-radius: 8px;
+            height: 520px;
+            background-color: #050508;
+            border-radius: 16px;
             overflow: hidden;
-            margin-top: 20px;
+            margin-top: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h2 style="margin:0; color: var(--primary-color);">Direct Live Stream Studio</h2>
+        <h2>STREAMSTUDIO PRO</h2>
     </header>
 
     <div class="container">
         
         <div class="box">
-            <!-- STEP 1: GOOGLE LOGIN -->
+            <!-- STEP 1: GOOGLE AUTH -->
             <div id="login-section">
-                <h2>Connect YouTube</h2>
-                <p>Please authorize your Google account to enable direct streaming.</p>
-                <button onclick="handleGoogleLogin()">Login with Google</button>
+                <h3>Authorize Streaming</h3>
+                <p>Connect your YouTube account to load stream tokens directly inside the browser studio.</p>
+                <button onclick="handleGoogleLogin()">Log In with Google</button>
             </div>
 
-            <!-- STEP 2: SETUP STREAM -->
+            <!-- STEP 2: SETUP PANEL -->
             <div id="setup-section" style="display: none;">
-                <h2>Start a New Live Stream</h2>
+                <h3>Stream Settings</h3>
+                <p>Adjust your title and safety settings before broadcasting.</p>
                 <div class="input-group">
-                    <label>Stream Title</label>
-                    <input type="text" id="stream-title" placeholder="Enter stream title...">
+                    <label>Broadcast Title</label>
+                    <input type="text" id="stream-title" placeholder="e.g. Science Revision Live Class">
                 </div>
                 <div class="input-group">
-                    <label>Visibility</label>
+                    <label>Privacy Setting</label>
                     <select id="stream-visibility">
-                        <option value="unlisted" selected>Unlisted</option>
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
+                        <option value="unlisted" selected>Unlisted (Only app users can watch)</option>
+                        <option value="public">Public (Everyone on YT can watch)</option>
+                        <option value="private">Private (Only you can watch)</option>
                     </select>
                 </div>
-                <button onclick="startDirectStream()">Go Live</button>
+                <button onclick="startDirectStream()">Go Live Now</button>
             </div>
 
-            <!-- STEP 3: ACTIVE STREAM VIEW -->
+            <!-- STEP 3: RUNNING STREAM -->
             <div id="active-section" style="display: none;">
-                <h2 id="active-title">Live Class</h2>
-                <p style="color: var(--accent-color); font-weight: bold;">● Broadcasting to YouTube... (It may take 10-15 seconds to show up on YT)</p>
+                <h3 id="active-title" style="color: var(--primary-color);">Broadcasting Event</h3>
+                <p style="color: var(--accent-color); font-weight: 700; display: flex; align-items: center; justify-content: center;">
+                    <span class="pulse-dot"></span> LIVE BROADCAST ACTIVE (Wait 10-15s for YouTube synchronization)
+                </p>
                 <div id="jitsi-container"></div>
-                <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 20px;">End Stream</button>
+                <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 25px;">Stop Broadcast</button>
             </div>
         </div>
 
@@ -148,6 +247,7 @@
             measurementId: "G-6ZP1FPMKSJ"
         };
 
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -189,13 +289,13 @@
             const title = document.getElementById('stream-title').value;
             const visibility = document.getElementById('stream-visibility').value;
 
-            if(!title) return alert("Please enter a stream title.");
+            if(!title) return alert("Please specify a stream title.");
 
             document.getElementById('setup-section').style.display = 'none';
-            alert("Initializing Stream. Please wait...");
+            alert("Creating secure stream connection. Please hold...");
 
             try {
-                // 1. Create Broadcast with AutoStart and AutoStop enabled
+                // 1. Create broadcast on YT (Set to Auto Start/Stop)
                 const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status,contentDetails', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -203,15 +303,15 @@
                         snippet: { title: title, scheduledStartTime: new Date().toISOString() },
                         status: { privacyStatus: visibility, selfDeclaredMadeForKids: false },
                         contentDetails: {
-                            enableAutoStart: true,  // Auto Go-Live when data starts flowing
-                            enableAutoStop: true    // Auto End-Live when Jitsi stops
+                            enableAutoStart: true,
+                            enableAutoStop: true
                         }
                     })
                 });
                 const broadcastData = await broadcastRes.json();
                 currentBroadcastId = broadcastData.id;
 
-                // 2. Create Live Stream (RTMP Key)
+                // 2. Create Live Stream Pipe
                 const streamRes = await fetch('https://www.googleapis.com/youtube/v3/liveStreams?part=snippet,cdn', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -224,13 +324,13 @@
                 currentStreamId = streamData.id;
                 const streamKey = streamData.cdn.ingestionInfo.streamName;
 
-                // 3. Bind Stream to Broadcast
+                // 3. Link Stream to Broadcast
                 await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id=${currentBroadcastId}&part=id,contentDetails&streamId=${currentStreamId}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
 
-                // 4. Save to Realtime Database
+                // 4. Update Firebase
                 const newStreamRef = db.ref('classes').push();
                 currentDbKey = newStreamRef.key;
                 await newStreamRef.set({
@@ -240,12 +340,12 @@
                     date: new Date().toLocaleDateString()
                 });
 
-                // 5. Run Jitsi and Start Auto Stream
+                // 5. Run Jitsi Frame
                 runJitsiIframe(title, streamKey);
 
             } catch (err) {
                 console.error(err);
-                alert("Session Expired or Connection Error. Reconnecting...");
+                alert("Session Expired or Connection Lost. Re-authorizing account...");
                 localStorage.removeItem('yt_access_token');
                 location.reload();
             }
@@ -259,9 +359,15 @@
             const options = {
                 roomName: "DirectLiveHub_" + Math.random().toString(36).substring(7),
                 width: "100%",
-                height: 500,
+                height: 520,
                 parentNode: document.querySelector('#jitsi-container'),
-                configOverwrite: { startWithAudioMuted: false },
+                
+                // MOBILE DEEP LINKING BYPASS ENABLED
+                configOverwrite: { 
+                    startWithAudioMuted: false,
+                    disableDeepLinking: true // Bypasses mobile landing app screen
+                },
+                
                 interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'hangup'] }
             };
 
@@ -269,34 +375,33 @@
 
             jitsiAPI.addEventListener('videoConferenceJoined', () => {
                 setTimeout(() => {
-                    // Send Jitsi streaming bytes to YouTube RTMP endpoint
+                    // Send Jitsi Video feed directly to YouTube RTMP Key
                     jitsiAPI.executeCommand('startRecording', {
                         mode: 'stream',
                         rtmpStreamKey: streamKey
                     });
-                }, 4000); // 4 seconds buffer time
+                }, 4000); 
             });
         }
 
         async function stopDirectStream() {
-            if(!confirm("Are you sure you want to end the stream?")) return;
+            if(!confirm("Are you sure you want to end this live broadcast?")) return;
 
             if(jitsiAPI) {
                 jitsiAPI.executeCommand('stopRecording', { mode: 'stream' });
                 jitsiAPI.dispose();
             }
 
-            // Update Database
             if(currentDbKey) {
                 await db.ref('classes/' + currentDbKey).update({
                     status: "recorded"
                 });
             }
 
-            alert("Broadcast Finished! YouTube will process and save the recording.");
+            alert("Broadcast concluded successfully!");
             document.getElementById('active-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'block';
         }
     </script>
 </body>
-    </html>
+</html>
