@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Live Stream Studio</title>
+    
+    <!-- CDNs: Google OAuth, Jitsi, and Firebase (Realtime Database Compat) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://meet.jit.si/external_api.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f0f15;
+            --card-color: #1a1a24;
+            --primary-color: #00e5ff;
+            --text-color: #ffffff;
+            --accent-color: #ff0055;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            width: 100%;
+            background-color: var(--card-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+            border-bottom: 2px solid #252538;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 40px;
+        }
+        .box {
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        button:hover { opacity: 0.9; transform: scale(1.02); }
+        .btn-danger { background-color: var(--accent-color); color: white; }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        input, select {
+            padding: 12px;
+            background-color: #252535;
+            border: 1px solid #3e3e5a;
+            color: white;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 16px;
+        }
+        #jitsi-container {
+            width: 100%;
+            height: 500px;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2 style="margin:0; color: var(--primary-color);">Direct Live Stream Studio</h2>
+    </header>
+
+    <div class="container">
+        
+        <div class="box">
+            <!-- STEP 1: GOOGLE LOGIN -->
+            <div id="login-section">
+                <h2>Connect YouTube</h2>
+                <p>Please authorize your Google account to enable direct streaming.</p>
+                <button onclick="handleGoogleLogin()">Login with Google</button>
+            </div>
+
+            <!-- STEP 2: SETUP STREAM (Logged In) -->
+            <div id="setup-section" style="display: none;">
+                <h2>Start a New Live Stream</h2>
+                <div class="input-group">
+                    <label>Stream Title</label>
+                    <input type="text" id="stream-title" placeholder="Enter stream title...">
+                </div>
+                <div class="input-group">
+                    <label>Visibility</label>
+                    <select id="stream-visibility">
+                        <option value="unlisted" selected>Unlisted</option>
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                    </select>
+                </div>
+                <button onclick="startDirectStream()">Go Live</button>
+            </div>
+
+            <!-- STEP 3: ACTIVE STREAM VIEW -->
+            <div id="active-section" style="display: none;">
+                <h2 id="active-title">Live Class</h2>
+                <p style="color: var(--accent-color); font-weight: bold;">● Broadcasting to YouTube...</p>
+                <div id="jitsi-container"></div>
+                <button onclick="stopDirectStream()" class="btn-danger" style="margin-top: 20px;">End Stream</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION (Credentials Pre-filled)
+        // ==========================================
+        const CLIENT_ID = '878851646059-df1b22bspju27a2gjb4o9n4mrtpo7kkr.apps.googleusercontent.com';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPm2za3Ho0Hd8Henuhq0KxAHyUQh-Hi-U",
+            authDomain: "question-metabase.firebaseapp.com",
+            databaseURL: "https://question-metabase-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "question-metabase",
+            storageBucket: "question-metabase.firebasestorage.app",
+            messagingSenderId: "770698198753",
+            appId: "1:770698198753:web:59ae49d78b6013bab5c1a0",
+            measurementId: "G-6ZP1FPMKSJ"
+        };
+
+        // Initialize Firebase Realtime Database
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let tokenClient;
+        let accessToken = localStorage.getItem('yt_access_token');
+        let currentBroadcastId = null;
+        let currentStreamId = null;
+        let jitsiAPI = null;
+        let currentDbKey = null;
+
+        window.onload = function() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube',
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        accessToken = tokenResponse.access_token;
+                        localStorage.setItem('yt_access_token', accessToken);
+                        showSetupSection();
+                    }
+                }
+            });
+
+            // Auto login if token exists
+            if (accessToken) {
+                showSetupSection();
+            }
+        };
+
+        function handleGoogleLogin() {
+            tokenClient.requestAccessToken();
+        }
+
+        function showSetupSection() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'block';
+        }
+
+        // ==========================================
+        // AUTO STREAMING LOGIC
+        // ==========================================
+        async function startDirectStream() {
+            const title = document.getElementById('stream-title').value;
+            const visibility = document.getElementById('stream-visibility').value;
+
+            if(!title) return alert("Please enter a stream title.");
+
+            document.getElementById('setup-section').style.display = 'none';
+            alert("Initializing Stream. Please wait...");
+
+            try {
+                // 1. Create Broadcast on YouTube
+                const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        snippet: { title: title, scheduledStartTime: new Date().toISOString() },
+                        status: { privacyStatus: visibility, selfDeclaredMadeForKids: false }
+                    })
+                });
+                const broadcastData = await broadcastRes.json();
+                currentBroadcastId = broadcastData.id;
+
+                // 2. Create Live Stream (RTMP Key)
+                const streamRes = await fetch('https://www.googleapis.com/youtube/v3/liveStreams?part=snippet,cdn', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        snippet: { title: title + " stream" },
+                        cdn: { frameRate: "variable", ingestionType: "rtmp", resolution: "variable" }
+                    })
+                });
+                const streamData = await streamRes.json();
+                currentStreamId = streamData.id;
+                const streamKey = streamData.cdn.ingestionInfo.streamName;
+
+                // 3. Bind Stream to Broadcast
+                await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id=${currentBroadcastId}&part=id,contentDetails&streamId=${currentStreamId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                // 4. Save to Realtime Database
+                const newStreamRef = db.ref('classes').push();
+                currentDbKey = newStreamRef.key;
+                await newStreamRef.set({
+                    title: title,
+                    videoId: currentBroadcastId,
+                    status: "live",
+                    date: new Date().toLocaleDateString()
+                });
+
+                // 5. Run Jitsi and Start Auto Stream
+                runJitsiIframe(title, streamKey);
+
+            } catch (err) {
+                console.error(err);
+                alert("Auth Error or Session Expired. Reconnecting...");
+                localStorage.removeItem('yt_access_token');
+                location.reload();
+            }
+        }
+
+        function runJitsiIframe(title, streamKey) {
+            document.getElementById('active-title').innerText = title;
+            document.getElementById('active-section').style.display = 'block';
+
+            const domain = "meet.jit.si";
+            const options = {
+                roomName: "DirectLiveHub_" + Math.random().toString(36).substring(7),
+                width: "100%",
+                height: 500,
+                parentNode: document.querySelector('#jitsi-container'),
+                configOverwrite: { startWithAudioMuted: false },
+                interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'hangup'] }
+            };
+
+            jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+
+            // Trigger stream automatically when joined
+            jitsiAPI.addEventListener('videoConferenceJoined', () => {
+                setTimeout(() => {
+                    jitsiAPI.executeCommand('startRecording', {
+                        mode: 'stream',
+                        rtmpStreamKey: streamKey
+                    });
+                }, 3000); 
+            });
+        }
+
+        async function stopDirectStream() {
+            if(!confirm("Are you sure you want to end the stream?")) return;
+
+            // Stop Jitsi & RTMP transmission
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('stopRecording', { mode: 'stream' });
+                jitsiAPI.dispose();
+            }
+
+            // Close YouTube Broadcast
+            try {
+                await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id=${currentBroadcastId}&part=id,status`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+            } catch (e) { console.log(e); }
+
+            // Update Realtime Database status to 'recorded'
+            if(currentDbKey) {
+                await db.ref('classes/' + currentDbKey).update({
+                    status: "recorded"
+                });
+            }
+
+            alert("Broadcast Finished!");
+            document.getElementById('active-section').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
