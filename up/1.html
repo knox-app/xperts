@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Xperts Authentication</title>
+    
+    <!-- Import Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <style>
+        /* Base Resets & Typography */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #e5e9f0; /* Desktop background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* App Container (Mobile Simulator on Desktop) */
+        .app-container {
+            /* Matches the subtle blue-to-white gradient in the screenshot */
+            background: linear-gradient(180deg, #eef3fc 0%, #f7f9fc 25%, #ffffff 100%);
+            width: 100%;
+            max-width: 420px;
+            min-height: 100vh;
+            padding: 24px 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Bar / Back Arrow */
+        .top-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .back-arrow {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        /* Logo Area */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo-main {
+            font-size: 38px;
+            font-weight: 900;
+            color: #0b57d0; /* A strong, professional brand blue */
+            letter-spacing: -1.5px;
+            margin: 0;
+            line-height: 1;
+        }
+        .logo-sub {
+            font-size: 15px;
+            font-weight: 400;
+            color: #444746;
+            margin-top: 8px;
+            letter-spacing: 0.2px;
+        }
+        .logo-sub span {
+            font-weight: 800;
+            color: #000000;
+            letter-spacing: 0.8px;
+        }
+
+        /* Hero Section */
+        .hero-heading {
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            color: #1f1f1f;
+            margin: 0 0 16px 0;
+            letter-spacing: -0.3px;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 340px;
+            display: block;
+            margin: 0 auto 32px auto;
+            border-radius: 20px;
+            mix-blend-mode: multiply; /* Helps the image blend into the gradient */
+        }
+
+        /* Input Area */
+        .input-group {
+            width: 100%;
+            margin-top: 5px;
+        }
+        .input-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f1f1f;
+            margin-bottom: 12px;
+        }
+        
+        .custom-input {
+            width: 100%;
+            padding: 16px 18px;
+            border-radius: 12px; /* Smooth card-like rounding */
+            border: 1px solid #dcdcdc;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #1f1f1f;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .custom-input::placeholder {
+            color: #757575;
+            font-weight: 400;
+        }
+        .custom-input:focus {
+            border-color: #0b57d0;
+            box-shadow: 0 0 0 1px #0b57d0;
+        }
+
+        /* Button */
+        .primary-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 50px; /* Pill shape matching the screenshot */
+            background-color: #0b57d0;
+            color: #ffffff;
+            border: none;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        .primary-btn:hover {
+            background-color: #0842a0;
+        }
+        .primary-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Helpers */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Desktop Layout Refinement */
+        @media (min-width: 480px) {
+            .app-container {
+                border-radius: 24px;
+                min-height: auto;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                margin: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- Top Bar with Back Arrow -->
+    <div class="top-bar">
+        <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </div>
+
+    <!-- Logos -->
+    <div class="logo-container">
+        <h1 class="logo-main">Xperts</h1>
+        <div class="logo-sub">by <span>PERPLEXITY</span></div>
+    </div>
+
+    <!-- Heading & Image -->
+    <h2 class="hero-heading">No more ratta. Concepts samjho.</h2>
+    <img src="https://i.ibb.co/cS3Q54cs/1000452737-removebg-preview.png" alt="Hero Concept Image" class="hero-image">
+
+    <!-- Form Section -->
+    <div id="form-wrapper">
+        
+        <!-- Step 1: Identity Input -->
+        <div id="step-identity" class="input-group">
+            <label class="input-label" for="userId">Please tell us your Mobile No. or Email</label>
+            <input type="text" id="userId" class="custom-input" placeholder="e.g. 9876543210 or abc@xyz.com" autocomplete="off">
+            <button id="btn-check" class="primary-btn">Continue</button>
+        </div>
+
+        <!-- Step 2: OTP Input (Hidden Initially) -->
+        <div id="step-otp" class="input-group hidden">
+            <label class="input-label" for="otpCode">Enter the OTP sent to you</label>
+            <input type="text" id="otpCode" class="custom-input" placeholder="Enter 6-digit OTP" autocomplete="off">
+            <button id="btn-verify" class="primary-btn">Verify & Login</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Logic (Unchanged) -->
+<script type="module">
+    // Firebase Setup (Replace with your actual config)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "question-metabase",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // EmailJS Setup
+    emailjs.init("Yr9MutUoHOEONnFgn");
+
+    // Variables
+    let generatedOTP = "";
+    let currentUserData = null;
+
+    document.getElementById('btn-check').addEventListener('click', async () => {
+        const inputStr = document.getElementById('userId').value.trim();
+        if(!inputStr) return alert("Please enter an Email or Mobile No.");
+
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputStr);
+        const searchField = isEmail ? "email" : "mobile";
+
+        try {
+            document.getElementById('btn-check').innerText = "Checking...";
+            
+            // 1. Check if user is registered in main 'users' collection
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where(searchField, "==", inputStr));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // User is registered
+                currentUserData = querySnapshot.docs[0].data();
+                
+                // Determine email to send OTP to
+                const emailToSend = isEmail ? inputStr : currentUserData.email;
+                if(!emailToSend) {
+                    alert("No email associated with this account to send OTP.");
+                    document.getElementById('btn-check').innerText = "Continue";
+                    return;
+                }
+
+                sendOTP(emailToSend);
+            } else {
+                // 2. User NOT in 'users'. Check 'Teachers' collection
+                const teachersRef = collection(db, "Teachers");
+                const tq = query(teachersRef, where(searchField, "==", inputStr));
+                const teacherSnapshot = await getDocs(tq);
+
+                if (!teacherSnapshot.empty) {
+                    // Exists in Teachers but not registered -> Redirect to Teacher Signup
+                    window.location.href = `2.html?num=${inputStr}&type=teachers`;
+                } else {
+                    // Does not exist anywhere -> Redirect to Student Signup
+                    window.location.href = `2.html?num=${inputStr}&type=student`;
+                }
+            }
+        } catch (error) {
+            console.error("Error checking user:", error);
+            alert("Error connecting to database.");
+            document.getElementById('btn-check').innerText = "Continue";
+        }
+    });
+
+    function sendOTP(email) {
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+        
+        emailjs.send("service_63mnm5a", "template_0ii8pai", {
+            to_email: email,
+            message: `Your login OTP is: ${generatedOTP}` // Adjust variable based on your EmailJS template
+        }).then(() => {
+            document.getElementById('step-identity').classList.add('hidden');
+            document.getElementById('step-otp').classList.remove('hidden');
+        }).catch((err) => {
+            alert("Failed to send OTP email.");
+            console.error(err);
+            document.getElementById('btn-check').innerText = "Continue";
+        });
+    }
+
+    document.getElementById('btn-verify').addEventListener('click', () => {
+        const userOTP = document.getElementById('otpCode').value;
+        if(userOTP === generatedOTP || userOTP === "123456") { // 123456 as bypass for testing
+            
+            // Redirect based on type
+            const type = currentUserData.type;
+            if(type === 'admin') window.location.href = "https://abc.xyz/admin";
+            else if(type === 'student') window.location.href = "https://abc.xyz/student";
+            else if(type === 'teacher' || type === 'teachers') window.location.href = "https://abc.xyz/teacher";
+            else alert("Unknown user type!");
+            
+        } else {
+            alert("Invalid OTP");
+        }
+    });
+</script>
+</body>
+</html>
