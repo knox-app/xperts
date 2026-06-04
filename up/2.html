@@ -10,109 +10,43 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Auto-Login Check (Runs immediately) -->
+    <script>
+        const sessionData = localStorage.getItem('xperts_user_session');
+        if (sessionData) {
+            try {
+                const user = JSON.parse(sessionData);
+                if(user.type === 'admin') window.location.href = "https://abc.xyz/admin";
+                else if(user.type === 'student') window.location.href = "https://abc.xyz/student";
+                else if(user.type === 'teacher' || user.type === 'teachers') window.location.href = "https://abc.xyz/teacher";
+            } catch(e) {}
+        }
+    </script>
+
     <style>
-        /* Base Resets & Typography */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #e5e9f0;
-            margin: 0; padding: 0;
-            display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh;
-        }
-
-        /* App Container with Image's Blue Gradient */
-        .app-container {
-            background: linear-gradient(180deg, #007bed 0%, #45b6f0 15%, #eef3fc 30%, #ffffff 100%);
-            width: 100%; max-width: 420px; min-height: 100vh;
-            position: relative; display: flex; flex-direction: column;
-        }
-
-        /* Top Graphic Area (ID Badge) */
-        .graphic-container {
-            width: 100%; display: flex; justify-content: center;
-            padding-top: 30px; margin-bottom: 20px;
-        }
-        .badge-svg {
-            width: 260px; height: auto;
-            filter: drop-shadow(0 15px 25px rgba(0,100,200,0.15));
-        }
-
-        /* Form Area */
-        .form-wrapper {
-            padding: 0 24px 40px 24px;
-            flex-grow: 1; display: flex; flex-direction: column;
-        }
-
-        /* Input Groups */
+        body { font-family: 'Inter', sans-serif; background-color: #e5e9f0; margin: 0; padding: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .app-container { background: linear-gradient(180deg, #007bed 0%, #45b6f0 15%, #eef3fc 30%, #ffffff 100%); width: 100%; max-width: 420px; min-height: 100vh; position: relative; display: flex; flex-direction: column; }
+        .graphic-container { width: 100%; display: flex; justify-content: center; padding-top: 30px; margin-bottom: 20px; }
+        .badge-svg { width: 260px; height: auto; filter: drop-shadow(0 15px 25px rgba(0,100,200,0.15)); }
+        .form-wrapper { padding: 0 24px 40px 24px; flex-grow: 1; display: flex; flex-direction: column; }
         .input-group { width: 100%; margin-bottom: 24px; }
-        
-        .input-label {
-            display: block; font-size: 16px; font-weight: 600;
-            color: #1f1f1f; margin-bottom: 12px; margin-left: 2px;
-        }
-        
-        .custom-input {
-            width: 100%; padding: 16px 18px;
-            border-radius: 12px; border: 2px solid #0b57d0;
-            font-size: 16px; font-family: 'Inter', sans-serif;
-            background-color: #ffffff; color: #1f1f1f;
-            outline: none; transition: all 0.2s ease;
-        }
+        .input-label { display: block; font-size: 16px; font-weight: 600; color: #1f1f1f; margin-bottom: 12px; margin-left: 2px; }
+        .custom-input { width: 100%; padding: 16px 18px; border-radius: 12px; border: 2px solid #0b57d0; font-size: 16px; font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1f1f; outline: none; }
         .custom-input:placeholder-shown { border: 1px solid #dcdcdc; }
-        .custom-input::placeholder { color: #888; font-weight: 400; }
         .custom-input:focus { border: 2px solid #0b57d0; }
-
-        /* Selectable Chips (Pills) UI */
         .chip-group { display: flex; flex-wrap: wrap; gap: 10px; }
         .chip-label { cursor: pointer; }
         .chip-input { display: none; }
-        .chip-text {
-            display: inline-block; padding: 12px 18px;
-            border-radius: 12px; border: 1px solid #dcdcdc;
-            background-color: #ffffff; font-size: 15px; font-weight: 500;
-            color: #444; transition: all 0.2s ease; user-select: none;
-        }
-        
-        /* Selected State for Chips */
-        .chip-input:checked + .chip-text {
-            background-color: #e8f0fe; border-color: #0b57d0; color: #0b57d0;
-        }
-
-        /* Bottom Fixed Button Area */
-        .bottom-bar {
-            padding: 20px 24px 30px 24px;
-            background: #ffffff;
-            position: sticky; bottom: 0;
-            border-top: 1px solid #f0f0f0;
-        }
-        .primary-btn {
-            width: 100%; padding: 16px;
-            border-radius: 50px; background-color: #0b57d0;
-            color: #ffffff; border: none;
-            font-size: 18px; font-family: 'Inter', sans-serif; font-weight: 600;
-            cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease;
-        }
-        .primary-btn:hover { background-color: #0842a0; }
-        .primary-btn:active { transform: scale(0.98); }
-
-        /* Desktop Layout Refinement */
-        @media (min-width: 480px) {
-            .app-container {
-                border-radius: 24px; min-height: auto;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-                margin: 40px 0; overflow: hidden;
-            }
-            .bottom-bar { position: relative; border-top: none; padding-top: 0; }
-        }
+        .chip-text { display: inline-block; padding: 12px 18px; border-radius: 12px; border: 1px solid #dcdcdc; background-color: #ffffff; font-size: 15px; font-weight: 500; color: #444; user-select: none; }
+        .chip-input:checked + .chip-text { background-color: #e8f0fe; border-color: #0b57d0; color: #0b57d0; }
+        .bottom-bar { padding: 20px 24px 30px 24px; background: #ffffff; position: sticky; bottom: 0; border-top: 1px solid #f0f0f0; }
+        .primary-btn { width: 100%; padding: 16px; border-radius: 50px; background-color: #0b57d0; color: #ffffff; border: none; font-size: 18px; font-weight: 600; cursor: pointer; }
+        @media (min-width: 480px) { .app-container { border-radius: 24px; min-height: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.08); margin: 40px 0; overflow: hidden; } .bottom-bar { position: relative; border-top: none; padding-top: 0; } }
     </style>
 </head>
 <body>
-
 <div class="app-container">
-    
-    <!-- Decorative ID Badge Graphic -->
     <div class="graphic-container">
         <svg class="badge-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
             <path d="M90 0 L110 0 L105 25 L95 25 Z" fill="#e0e0e0"/>
@@ -122,43 +56,24 @@
             <rect x="50" y="105" width="100" height="12" rx="4" fill="#a4e4d6"/>
         </svg>
     </div>
-
-    <!-- Dynamic Form Area -->
-    <div class="form-wrapper" id="form-container">
-        <!-- Content injected by JS -->
-    </div>
-
-    <!-- Submit Button -->
+    <div class="form-wrapper" id="form-container"></div>
     <div class="bottom-bar">
         <button id="btn-submit" class="primary-btn">Continue</button>
     </div>
-
 </div>
 
-<!-- Logic -->
 <script type="module">
-    // Firebase Setup (Replace with your actual config)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "question-metabase",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_ID",
-        appId: "YOUR_APP_ID"
-    };
-
+    const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "question-metabase", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_ID", appId: "YOUR_APP_ID" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // URL Parameters
     const urlParams = new URLSearchParams(window.location.search);
     const num = urlParams.get('num') || "";
-    const type = urlParams.get('type') || "student"; // defaults to student
+    const type = urlParams.get('type') || "student"; 
 
-    // Determine opposite contact method
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(num);
     const oppositeLabel = isEmail ? "Mobile Number" : "Email ID";
     const oppositeType = isEmail ? "text" : "email";
@@ -168,162 +83,66 @@
     const classesArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '12+'];
     const subjectsArray = ['English', 'Hindi', 'Physics', 'Chemistry', 'Botany', 'Zoology', 'Mathematics', 'GK', 'History', 'Economics', 'Pol. Science', 'Science', 'Computer', 'EVS'];
 
-    // Helper to generate Chip UI
     function generateChips(name, options, isMultiple = false) {
         const inputType = isMultiple ? "checkbox" : "radio";
-        return options.map(opt => `
-            <label class="chip-label">
-                <input type="${inputType}" name="${name}" value="${opt}" class="chip-input">
-                <span class="chip-text">${typeof opt === 'number' ? 'Class ' + opt : opt}</span>
-            </label>
-        `).join('');
+        return options.map(opt => `<label class="chip-label"><input type="${inputType}" name="${name}" value="${opt}" class="chip-input"><span class="chip-text">${typeof opt === 'number' ? 'Class ' + opt : opt}</span></label>`).join('');
     }
 
-    // Generate Form Based on Type
     if (type === 'student') {
         formContainer.innerHTML = `
-            <div class="input-group">
-                <label class="input-label">Please tell us your name</label>
-                <input type="text" id="fullName" class="custom-input" placeholder="Student's full name" required>
-            </div>
-            
-            <div class="input-group">
-                <label class="input-label">Select your gender</label>
-                <div class="chip-group">
-                    ${generateChips('gender', ['Male', 'Female'])}
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Select your class</label>
-                <div class="chip-group">
-                    ${generateChips('studentClass', classesArray)}
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Date of Birth</label>
-                <input type="date" id="dob" class="custom-input" required>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Please enter your ${oppositeLabel}</label>
-                <input type="${oppositeType}" id="${oppositeId}" class="custom-input" placeholder="Enter ${oppositeLabel}" required>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Parent or Guardian Name</label>
-                <input type="text" id="guardian" class="custom-input" placeholder="Guardian's name" required>
-            </div>
+            <div class="input-group"><label class="input-label">Please tell us your name</label><input type="text" id="fullName" class="custom-input" placeholder="Student's full name" required></div>
+            <div class="input-group"><label class="input-label">Select your gender</label><div class="chip-group">${generateChips('gender', ['Male', 'Female'])}</div></div>
+            <div class="input-group"><label class="input-label">Select your class</label><div class="chip-group">${generateChips('studentClass', classesArray)}</div></div>
+            <div class="input-group"><label class="input-label">Date of Birth</label><input type="date" id="dob" class="custom-input" required></div>
+            <div class="input-group"><label class="input-label">Please enter your ${oppositeLabel}</label><input type="${oppositeType}" id="${oppositeId}" class="custom-input" placeholder="Enter ${oppositeLabel}" required></div>
+            <div class="input-group"><label class="input-label">Parent or Guardian Name</label><input type="text" id="guardian" class="custom-input" placeholder="Guardian's name" required></div>
         `;
-    } else if (type === 'teachers' || type === 'teacher') {
+    } else {
         formContainer.innerHTML = `
-            <div class="input-group">
-                <label class="input-label">Please tell us your name</label>
-                <input type="text" id="fullName" class="custom-input" placeholder="Teacher's full name" required>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Select your gender</label>
-                <div class="chip-group">
-                    ${generateChips('gender', ['Male', 'Female'])}
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Please enter your ${oppositeLabel}</label>
-                <input type="${oppositeType}" id="${oppositeId}" class="custom-input" placeholder="Enter ${oppositeLabel}" required>
-            </div>
-            
-            <div class="input-group">
-                <label class="input-label">Classes you teach (Select multiple)</label>
-                <div class="chip-group">
-                    ${generateChips('teachClass', classesArray, true)}
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">Subjects you teach (Select multiple)</label>
-                <div class="chip-group">
-                    ${generateChips('teachSubject', subjectsArray, true)}
-                </div>
-            </div>
+            <div class="input-group"><label class="input-label">Please tell us your name</label><input type="text" id="fullName" class="custom-input" placeholder="Teacher's full name" required></div>
+            <div class="input-group"><label class="input-label">Select your gender</label><div class="chip-group">${generateChips('gender', ['Male', 'Female'])}</div></div>
+            <div class="input-group"><label class="input-label">Please enter your ${oppositeLabel}</label><input type="${oppositeType}" id="${oppositeId}" class="custom-input" placeholder="Enter ${oppositeLabel}" required></div>
+            <div class="input-group"><label class="input-label">Classes you teach (Select multiple)</label><div class="chip-group">${generateChips('teachClass', classesArray, true)}</div></div>
+            <div class="input-group"><label class="input-label">Subjects you teach (Select multiple)</label><div class="chip-group">${generateChips('teachSubject', subjectsArray, true)}</div></div>
         `;
     }
 
-    // Handle Submission
     document.getElementById('btn-submit').addEventListener('click', async () => {
-        
-        // Basic Validation
         const fullName = document.getElementById('fullName').value.trim();
         const genderEl = document.querySelector('input[name="gender"]:checked');
         const contactInput = document.getElementById(oppositeId).value.trim();
 
-        if (!fullName) return alert("Please enter your full name.");
-        if (!genderEl) return alert("Please select your gender.");
-        if (!contactInput) return alert(`Please enter your ${oppositeLabel}.`);
+        if (!fullName || !genderEl || !contactInput) return alert("Please fill all required fields.");
 
         try {
             document.getElementById('btn-submit').innerText = "Creating Account...";
-            
-            let userData = {
-                type: type === 'teachers' ? 'teacher' : 'student', // Normalize type
-                fullName: fullName,
-                gender: genderEl.value,
-                createdAt: serverTimestamp()
-            };
+            let userData = { type: type === 'teachers' ? 'teacher' : 'student', fullName: fullName, gender: genderEl.value, createdAt: serverTimestamp() };
 
-            // Assign the URL parameter contact info vs Input contact info
-            if (isEmail) {
-                userData.email = num;
-                userData.mobile = contactInput;
-            } else {
-                userData.mobile = num;
-                userData.email = contactInput;
-            }
+            if (isEmail) { userData.email = num; userData.mobile = contactInput; } else { userData.mobile = num; userData.email = contactInput; }
 
-            // Append specific fields based on user type
             if (type === 'student') {
                 const classEl = document.querySelector('input[name="studentClass"]:checked');
                 const dob = document.getElementById('dob').value;
                 const guardian = document.getElementById('guardian').value.trim();
-                
-                if(!classEl) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Please select your class."); }
-                if(!dob) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Please enter your DOB."); }
-                
-                userData.class = classEl.value;
-                userData.dob = dob;
-                userData.guardian = guardian;
-                
+                if(!classEl || !dob) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Please complete all fields."); }
+                userData.class = classEl.value; userData.dob = dob; userData.guardian = guardian;
             } else {
                 const checkedClasses = Array.from(document.querySelectorAll('input[name="teachClass"]:checked')).map(el => el.value);
                 const checkedSubjects = Array.from(document.querySelectorAll('input[name="teachSubject"]:checked')).map(el => el.value);
-                
-                if(checkedClasses.length === 0) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Select at least one class."); }
-                if(checkedSubjects.length === 0) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Select at least one subject."); }
-
-                userData.classes = checkedClasses;
-                userData.subjects = checkedSubjects;
+                if(checkedClasses.length === 0 || checkedSubjects.length === 0) { document.getElementById('btn-submit').innerText = "Continue"; return alert("Select classes and subjects."); }
+                userData.classes = checkedClasses; userData.subjects = checkedSubjects;
             }
 
-            // 1. Save to 'users' collection in Firestore
             const docRef = await addDoc(collection(db, "users"), userData);
 
-            // 2. AUTO LOGIN FIX: Store the session data in localStorage so the next page knows they are logged in
-            userData.uid = docRef.id; // Also save the firestore ID locally for reference
+            userData.uid = docRef.id; 
             localStorage.setItem('xperts_user_session', JSON.stringify(userData));
-            localStorage.setItem('is_logged_in', 'true');
 
-            // 3. Redirections based on requirements
-            if (type === 'student') {
-                window.location.href = "https://abc.xyz/chouse";
-            } else {
-                window.location.href = "https://abc.xyz/col2";
-            }
+            if (type === 'student') window.location.href = "https://abc.xyz/chouse";
+            else window.location.href = "https://abc.xyz/col2";
 
         } catch (error) {
-            console.error("Error saving document: ", error);
-            alert("Error creating account. Please check your connection and try again.");
+            console.error(error); alert("Error creating account.");
             document.getElementById('btn-submit').innerText = "Continue";
         }
     });
