@@ -168,7 +168,7 @@
     const classesArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '12+'];
     const subjectsArray = ['English', 'Hindi', 'Physics', 'Chemistry', 'Botany', 'Zoology', 'Mathematics', 'GK', 'History', 'Economics', 'Pol. Science', 'Science', 'Computer', 'EVS'];
 
-    // Helper to generate Chip UI (Radio for single, Checkbox for multiple)
+    // Helper to generate Chip UI
     function generateChips(name, options, isMultiple = false) {
         const inputType = isMultiple ? "checkbox" : "radio";
         return options.map(opt => `
@@ -264,7 +264,7 @@
         if (!contactInput) return alert(`Please enter your ${oppositeLabel}.`);
 
         try {
-            document.getElementById('btn-submit').innerText = "Saving Data...";
+            document.getElementById('btn-submit').innerText = "Creating Account...";
             
             let userData = {
                 type: type === 'teachers' ? 'teacher' : 'student', // Normalize type
@@ -306,10 +306,15 @@
                 userData.subjects = checkedSubjects;
             }
 
-            // Save to 'users' collection in Firestore
-            await addDoc(collection(db, "users"), userData);
+            // 1. Save to 'users' collection in Firestore
+            const docRef = await addDoc(collection(db, "users"), userData);
 
-            // Redirections based on requirements
+            // 2. AUTO LOGIN FIX: Store the session data in localStorage so the next page knows they are logged in
+            userData.uid = docRef.id; // Also save the firestore ID locally for reference
+            localStorage.setItem('xperts_user_session', JSON.stringify(userData));
+            localStorage.setItem('is_logged_in', 'true');
+
+            // 3. Redirections based on requirements
             if (type === 'student') {
                 window.location.href = "https://abc.xyz/chouse";
             } else {
@@ -318,7 +323,7 @@
 
         } catch (error) {
             console.error("Error saving document: ", error);
-            alert("Error saving data. Please check your connection and try again.");
+            alert("Error creating account. Please check your connection and try again.");
             document.getElementById('btn-submit').innerText = "Continue";
         }
     });
