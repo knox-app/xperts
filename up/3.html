@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Your Avatar - Xperts</title>
+    
+    <!-- Import Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Resets */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; 
+            margin: 0; padding: 0;
+            display: flex; justify-content: center;
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+
+        .app-container {
+            width: 100%; max-width: 420px; min-height: 100vh;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Area */
+        .top-bar {
+            width: 100%; display: flex; align-items: center; justify-content: center;
+            padding: 20px 24px; position: relative;
+        }
+        .back-arrow {
+            position: absolute; left: 24px;
+            width: 24px; height: 24px;
+            cursor: pointer; color: #1a1a1a;
+        }
+        .header-title {
+            font-size: 20px; font-weight: 400; margin: 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 0 32px 60px 32px; text-align: center;
+        }
+
+        /* SVG Graphics Container */
+        .graphic-container {
+            width: 160px; height: 160px;
+            margin-bottom: 24px; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .graphic-svg {
+            width: 100%; height: 100%;
+        }
+
+        /* BETA Badge */
+        .beta-badge {
+            background-color: #f2f2f2; color: #1a1a1a;
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+            margin-bottom: 30px;
+        }
+
+        /* Typography */
+        .main-heading {
+            font-size: 22px; font-weight: 500; margin: 0 0 16px 0;
+        }
+        .description {
+            font-size: 15px; font-weight: 400; color: #4a4a4a;
+            line-height: 1.5; margin: 0;
+        }
+        .learn-more {
+            color: #4a4a4a; text-decoration: none;
+            border-bottom: 1px dashed #888; font-weight: 500;
+        }
+
+        /* Bottom Button */
+        .bottom-container {
+            padding: 20px 24px 40px 24px;
+            display: flex; justify-content: center; width: 100%;
+        }
+        .action-btn {
+            background-color: #f2f2f2; color: #1a1a1a;
+            border: none; border-radius: 50px;
+            padding: 16px 40px; font-size: 16px; font-weight: 500;
+            cursor: pointer; transition: background-color 0.2s ease;
+            width: auto; min-width: 180px;
+        }
+        .action-btn:hover { background-color: #e5e5e5; }
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        #avatarInput { display: none; }
+        
+        /* Desktop container restriction */
+        @media (min-width: 480px) {
+            body { background-color: #f4f7fb; align-items: center; }
+            .app-container {
+                background-color: #ffffff; border-radius: 20px;
+                min-height: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- Header -->
+    <div class="top-bar">
+        <svg class="back-arrow" id="btn-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <h1 class="header-title">Your avatar</h1>
+    </div>
+
+    <!-- Hidden Input for File/Camera -->
+    <input type="file" id="avatarInput" accept="image/*">
+
+    <!-- View 1: Intro State -->
+    <div class="content-area" id="view-intro">
+        
+        <div class="graphic-container">
+            <!-- Smiley Face SVG matching provided image -->
+            <svg class="graphic-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 90 A 40 40 0 0 1 50 10" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="70" cy="15" r="3" fill="#1a1a1a"/>
+                <circle cx="85" cy="28" r="3" fill="#1a1a1a"/>
+                <circle cx="93" cy="45" r="3" fill="#1a1a1a"/>
+                <circle cx="93" cy="63" r="3" fill="#1a1a1a"/>
+                <circle cx="85" cy="78" r="3" fill="#1a1a1a"/>
+                <circle cx="70" cy="88" r="3" fill="#1a1a1a"/>
+                <circle cx="56" cy="93" r="3" fill="#1a1a1a"/>
+                <circle cx="43" cy="40" r="3.5" fill="#1a1a1a"/>
+                <circle cx="63" cy="40" r="3.5" fill="#1a1a1a"/>
+                <path d="M38 52 C 38 65, 68 65, 68 52" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+                <path d="M38 52 L 68 52" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <div class="beta-badge">BETA</div>
+
+        <h2 class="main-heading">Capture a selfie photo</h2>
+        <p class="description">
+            Create an avatar to complete your profile. Look and sound like yourself whenever you teach. Your avatar can only be used by you. <a href="#" class="learn-more">Learn more</a>
+        </p>
+    </div>
+
+    <!-- Bottom Action Area -->
+    <div class="bottom-container">
+        <button id="btn-action" class="action-btn">Get started</button>
+    </div>
+
+</div>
+
+<!-- Logic -->
+<script type="module">
+    // Firebase Setup (Replace with your actual config)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "question-metabase",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Elements
+    const btnAction = document.getElementById('btn-action');
+    const btnBack = document.getElementById('btn-back');
+    const avatarInput = document.getElementById('avatarInput');
+
+    // ImgBB API Key
+    const IMGBB_API_KEY = "80c452b9a4b80f240ada316f23078d2c";
+
+    // 1. Session Check
+    let sessionUser = null;
+    try {
+        const sessionData = localStorage.getItem('xperts_user_session');
+        if (sessionData) {
+            sessionUser = JSON.parse(sessionData);
+        }
+        
+        // Ensure user is logged in AND is a teacher
+        if (!sessionUser || !sessionUser.uid || sessionUser.type !== 'teacher') {
+            alert("Unauthorized access. Please login as a teacher.");
+            window.location.href = "1.html"; // Redirect to login
+        }
+    } catch (e) {
+        window.location.href = "1.html";
+    }
+
+    // Back Button Logic
+    btnBack.addEventListener('click', () => {
+        window.location.href = "https://abc.xyz/teacher"; // Return to dashboard
+    });
+
+    // 2. Trigger File Input on "Get Started"
+    btnAction.addEventListener('click', () => {
+        if(btnAction.innerText === "Get started" || btnAction.innerText === "Try again") {
+            avatarInput.click(); 
+        }
+    });
+
+    // 3. Handle Selected File (Upload to ImgBB -> Firebase -> Redirect)
+    avatarInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        btnAction.innerText = "Uploading...";
+        btnAction.disabled = true;
+
+        try {
+            // Step A: Upload to ImgBB
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const imgbbData = await imgbbResponse.json();
+            
+            if (!imgbbData.success) {
+                throw new Error("ImgBB upload failed.");
+            }
+
+            const imageUrl = imgbbData.data.url; // Extract the hosted URL
+
+            // Step B: Save URL to Firestore
+            btnAction.innerText = "Saving Profile...";
+            const userRef = doc(db, "users", sessionUser.uid);
+            await updateDoc(userRef, {
+                avatarUrl: imageUrl
+            });
+
+            // Step C: Update Local Session Data
+            sessionUser.avatarUrl = imageUrl;
+            localStorage.setItem('xperts_user_session', JSON.stringify(sessionUser));
+
+            // Step D: Redirect immediately to 4.html
+            window.location.href = "4.html";
+
+        } catch (error) {
+            console.error("Error saving avatar:", error);
+            alert("Failed to upload avatar. Please check your connection and try again.");
+            btnAction.innerText = "Try again";
+            btnAction.disabled = false;
+            // Clear input so user can try selecting the same file again
+            avatarInput.value = ""; 
+        }
+    });
+</script>
+</body>
+</html>
