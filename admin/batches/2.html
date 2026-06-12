@@ -3,101 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Processing Enrollment...</title>
+    <title>Enrolling Student...</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Your Firebase Config -->
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
 </head>
 <body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen">
 
-    <div id="statusBox" class="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+    <div id="statusBox" class="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm">
         <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <h2 id="statusTitle" class="text-xl font-semibold mb-2">Processing Course...</h2>
-        <p id="statusMsg" class="text-gray-600">Please wait while we verify your coupon code.</p>
+        <h2 id="statusTitle" class="text-xl font-bold mb-2">Processing Enrollment</h2>
+        <p id="statusMsg" class="text-gray-500">Checking coupon and batch details...</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            updateDoc, 
+            arrayUnion, 
+            increment 
+        } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
+        // Initialize
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         async function processEnrollment() {
             const urlParams = new URLSearchParams(window.location.search);
-            const studentId = urlParams.get('student');
-            const couponCode = urlParams.get('cc');
-            const batchId = urlParams.get('batches');
+            const studentId = urlParams.get('student'); // e.g. XPRT2607063WE22
+            const couponCode = urlParams.get('cc');      // The generated code
+            const batchId = urlParams.get('batches');    // e.g. XPRTBTCH22805
 
             const statusTitle = document.getElementById('statusTitle');
             const statusMsg = document.getElementById('statusMsg');
             const loader = document.getElementById('loader');
 
+            // 1. Check if URL parameters exist
             if (!studentId || !couponCode || !batchId) {
-                showError("Invalid URL Parameters. Missing Data.");
+                showUI("Error", "Missing required info in URL.", "red");
                 return;
             }
 
             try {
-                // 1. Verify Coupon
+                // 2. Verify the Coupon first
                 const couponRef = doc(db, "coupons", couponCode);
                 const couponSnap = await getDoc(couponRef);
 
                 if (!couponSnap.exists()) {
-                    showError("Invalid Coupon Code.");
+                    showUI("Invalid Coupon", "This coupon code does not exist.", "red");
                     return;
                 }
 
                 const couponData = couponSnap.data();
                 const today = new Date().toISOString().split('T')[0];
 
-                // 2. Validations
+                // 3. Coupon Validations
                 if (couponData.batchId !== batchId) {
-                    showError("This coupon is not valid for this batch.");
+                    showUI("Mismatch", "Coupon not valid for this batch.", "red");
                     return;
                 }
                 if (today > couponData.validity) {
-                    showError("Coupon has expired.");
+                    showUI("Expired", "This coupon has expired.", "red");
                     return;
                 }
                 if (couponData.usedCount >= couponData.maxUsage) {
-                    showError("Coupon limit reached.");
+                    showUI("Limit Reached", "Coupon usage limit has been reached.", "red");
                     return;
                 }
 
-                // 3. Save Enrollment to Student Account
-                // Path: accounts > {studentId} > enrolled_batches > {batchId}
-                await setDoc(doc(db, "accounts", studentId, "enrolled_batches", batchId), {
-                    batchId: batchId,
-                    couponUsed: couponCode,
-                    enrolledDate: new Date().toISOString(),
-                    status: "active"
+                // 4. Update the Student Account (Matches your Image Structure)
+                // Path: Accounts > {studentId}
+                const studentRef = doc(db, "Accounts", studentId);
+                const studentSnap = await getDoc(studentRef);
+
+                if (!studentSnap.exists()) {
+                    showUI("Account Not Found", `Student ID ${studentId} not found.`, "red");
+                    return;
+                }
+
+                // Use arrayUnion to add the batchId into the 'Batches' array field
+                await updateDoc(studentRef, {
+                    "Batches": arrayUnion(batchId)
                 });
 
-                // 4. Update Coupon Usage Count
+                // 5. Update Coupon usage count
                 await updateDoc(couponRef, {
                     usedCount: increment(1)
                 });
 
-                // Success UI
-                loader.classList.add('hidden');
-                statusTitle.innerText = "Enrollment Successful!";
-                statusTitle.classList.add('text-green-600');
-                statusMsg.innerText = `You have been added to ${batchId}`;
+                showUI("Success!", `Successfully added to ${batchId}`, "green");
 
             } catch (error) {
                 console.error(error);
-                showError("System Error: " + error.message);
+                showUI("System Error", error.message, "red");
             }
         }
 
-        function showError(msg) {
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('statusTitle').innerText = "Failed";
-            document.getElementById('statusTitle').classList.add('text-red-600');
-            document.getElementById('statusMsg').innerText = msg;
+        function showUI(title, msg, color) {
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMsg = document.getElementById('statusMsg');
+            const loader = document.getElementById('loader');
+
+            loader.classList.add('hidden');
+            statusTitle.innerText = title;
+            statusMsg.innerText = msg;
+            
+            if(color === "red") statusTitle.className = "text-xl font-bold mb-2 text-red-600";
+            if(color === "green") statusTitle.className = "text-xl font-bold mb-2 text-green-600";
         }
 
-        // Start processing on load
         processEnrollment();
     </script>
 </body>
