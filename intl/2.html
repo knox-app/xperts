@@ -9,60 +9,59 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
     <style>
-        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; background-color: white; color: #1a1a1a; }
+        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; --active-green: #2ecc71; --ended-red: #e74c3c; }
+        body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; background-color: white; color: #1a1a1a; overflow-x: hidden; }
         
-        /* Header */
+        /* Header & Profile */
         .header { display: flex; align-items: center; padding: 20px 15px; position: sticky; top: 0; background: white; z-index: 10; }
         .back-btn { font-size: 24px; margin-right: 15px; text-decoration: none; color: #333; }
         .header h2 { margin: 0; font-size: 18px; font-weight: 600; }
 
-        /* Profile Top */
         .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
         .avatar-circle { width: 90px; height: 90px; border-radius: 50%; border: 1px solid #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-text h1 { margin: 0; font-size: 22px; font-weight: 700; color: #333; }
+        .profile-text h1 { margin: 0; font-size: 22px; font-weight: 700; }
         .profile-text p { margin: 5px 0; color: var(--text-gray); font-size: 15px; }
-        .enrolled-badge { display: inline-block; background: #2b2b2b; color: white; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-top: 5px; }
+        .enrolled-badge { display: inline-block; background: #2b2b2b; color: white; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
 
-        /* Sections Container */
-        .content { background: var(--bg-gray); padding: 15px; border-radius: 25px 25px 0 0; min-height: 80vh; }
-        .card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: var(--card-shadow); }
+        /* Content Area */
+        .content { background: var(--bg-gray); padding: 15px; border-radius: 25px 25px 0 0; min-height: 85vh; padding-bottom: 50px; }
+        .card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
         .card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .card-title-row h3 { margin: 0; font-size: 15px; color: var(--text-gray); font-weight: 500; }
-        .edit-btn { color: var(--primary-blue); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .edit-btn { color: var(--primary-blue); font-size: 14px; font-weight: 600; cursor: pointer; }
 
         .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-        .info-row:last-child { margin-bottom: 0; }
         .info-label { color: var(--text-gray); }
-        .info-value { font-weight: 500; text-align: right; color: #1a1a1a; }
+        .info-value { font-weight: 500; text-align: right; }
 
-        /* Batch Cards */
-        .batch-title { font-weight: bold; font-size: 14px; display: block; margin-bottom: 10px; line-height: 1.4; padding-right: 60px; position: relative; }
-        .special-tag { position: absolute; right: 0; top: 0; background: #444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+        /* Batch Status Styling */
+        .status-tag { position: absolute; right: 18px; top: 18px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .status-active { color: var(--active-green); }
+        .status-ended { color: var(--text-gray); }
+        .batch-name-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; display: block; max-width: 75%; line-height: 1.4; }
 
-        /* Custom Modal (Bottom Sheet) */
+        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: flex-end; z-index: 100; }
         .modal-sheet { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-out; }
         .modal-sheet.show { transform: translateY(0); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .modal-header h2 { margin: 0; font-size: 24px; font-weight: 700; }
-        .close-circle { background: #f0f0f0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; font-size: 18px; }
-
-        .field-group { margin-bottom: 20px; }
-        .field-group label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 15px; }
         
-        /* Custom Date Picker Look */
-        .date-input-wrapper { position: relative; width: 100%; }
-        .custom-input { width: 100%; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; background: white; }
-        .calendar-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none; }
+        /* Support Modal Specifics */
+        .support-ui { text-align: center; }
+        .support-ui img { width: 100px; margin-bottom: 20px; }
+        .support-ui h2 { font-size: 20px; font-weight: 800; margin-bottom: 10px; line-height: 1.3; }
+        .support-ui p { color: #666; margin-bottom: 30px; font-size: 15px; }
 
-        /* Gender Selection */
+        /* Edit Form Specifics */
+        .field-group { margin-bottom: 20px; }
+        .field-group label { display: block; font-weight: 600; margin-bottom: 10px; }
+        .custom-input { width: 100%; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; font-size: 16px; outline: none; box-sizing: border-box; }
         .btn-group { display: flex; gap: 10px; }
-        .choice-btn { flex: 1; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; background: white; font-size: 15px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .choice-btn { flex: 1; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; background: white; cursor: pointer; }
         .choice-btn.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); }
-
-        .submit-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+        
+        .blue-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .close-icon { position: absolute; right: 20px; top: 20px; background: #f0f0f0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -77,7 +76,7 @@
             <img id="uPic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
         </div>
         <div class="profile-text">
-            <h1 id="uName">...</h1>
+            <h1 id="uName">Loading...</h1>
             <p id="uClass">Class - | -</p>
             <span class="enrolled-badge">ENROLLED STUDENT</span>
         </div>
@@ -86,14 +85,14 @@
     <div class="content">
         <!-- Contact Details -->
         <div class="card">
-            <div class="card-title-row"><h3>Contact Details</h3> <span class="edit-btn" onclick="openModal()">Edit</span></div>
+            <div class="card-title-row"><h3>Contact Details</h3> <span class="edit-btn" onclick="openSupportModal()">Edit</span></div>
             <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value" id="uPhone">-</span></div>
             <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="uEmail">-</span></div>
         </div>
 
-        <!-- Student Details -->
+        <!-- Student Details - EDIT WORKS HERE -->
         <div class="card">
-            <div class="card-title-row"><h3>Student Details</h3> <span class="edit-btn" onclick="openModal()">Edit</span></div>
+            <div class="card-title-row"><h3>Student Details</h3> <span class="edit-btn" onclick="openEditModal()">Edit</span></div>
             <div class="info-row"><span class="info-label">Gender</span><span class="info-value" id="uGender">-</span></div>
             <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value" id="uBlood">-</span></div>
             <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value" id="uDOB">-</span></div>
@@ -101,33 +100,24 @@
 
         <!-- Parent Details -->
         <div class="card">
-            <div class="card-title-row"><h3>Parent Details</h3> <span class="edit-btn" onclick="openModal()">Edit</span></div>
+            <div class="card-title-row"><h3>Parent Details</h3> <span class="edit-btn" onclick="openSupportModal()">Edit</span></div>
             <div class="info-row"><span class="info-label">Name</span><span class="info-value" id="uGuard">-</span></div>
             <div class="info-row"><span class="info-label">Contact number</span><span class="info-value">-</span></div>
         </div>
 
         <h3 style="margin: 10px 5px; font-size: 15px; color: #555;">Batch details</h3>
-        <div id="batchContainer">
-            <!-- Batches will be injected here -->
-        </div>
+        <div id="batchContainer"></div>
     </div>
 
-    <!-- Edit Modal Overlay -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-sheet" id="modalSheet">
-            <div class="modal-header">
-                <h2>Complete Your Profile</h2>
-                <div class="close-circle" onclick="closeModal()">✕</div>
-            </div>
-            
+    <!-- MODAL 1: Edit Profile -->
+    <div class="modal-overlay" id="editOverlay">
+        <div class="modal-sheet" id="editSheet">
+            <div class="close-icon" onclick="closeModals()">✕</div>
+            <h2 style="font-size: 24px; margin-bottom: 25px;">Complete Your Profile</h2>
             <div class="field-group">
                 <label>DOB</label>
-                <div class="date-input-wrapper">
-                    <input type="date" class="custom-input" id="inpDOB">
-                    <!-- Standard browser date pickers usually show their own icon, but we style the input container -->
-                </div>
+                <input type="date" class="custom-input" id="inpDOB">
             </div>
-
             <div class="field-group">
                 <label>Gender</label>
                 <div class="btn-group">
@@ -136,17 +126,27 @@
                     <button class="choice-btn" onclick="setGen('Other', this)">Other</button>
                 </div>
             </div>
-
             <div class="field-group">
                 <label>Blood group</label>
                 <select class="custom-input" id="inpBlood">
                     <option value="">Select one</option>
                     <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
-                    <option>A-</option><option>O-</option><option>B-</option><option>AB-</option>
                 </select>
             </div>
+            <button class="blue-btn" onclick="saveDetails()">Submit</button>
+        </div>
+    </div>
 
-            <button class="submit-btn" onclick="saveDetails()">Submit</button>
+    <!-- MODAL 2: Support Alert -->
+    <div class="modal-overlay" id="supportOverlay">
+        <div class="modal-sheet" id="supportSheet" style="text-align:center">
+            <div class="close-icon" onclick="closeModals()">✕</div>
+            <div class="support-ui">
+                <img src="https://cdn-icons-png.flaticon.com/512/1157/1157000.png" alt="Bell">
+                <h2>Want to change your parents name & phone number</h2>
+                <p>Please call our customer support</p>
+                <button class="blue-btn" onclick="window.location.href='tel:8005811475'">Call us</button>
+            </div>
         </div>
     </div>
 
@@ -163,9 +163,8 @@
             if(!doc.exists) return;
             const data = doc.data();
 
-            // Populate UI
             document.getElementById('uName').innerText = data['Full Name'];
-            document.getElementById('uClass').innerText = (data['Class'] || '12+') + " | NEET";
+            document.getElementById('uClass').innerText = (data['Class'] || '12+') + " Plus | NEET";
             document.getElementById('uPhone').innerText = data['Phone Number'];
             document.getElementById('uEmail').innerText = data['Email'];
             document.getElementById('uGender').innerText = data['Gender'] || '-';
@@ -174,10 +173,7 @@
             document.getElementById('uGuard').innerText = data['Guardians'] || '-';
             if(data['Profile Picture']) document.getElementById('uPic').src = data['Profile Picture'];
 
-            // Auto-open modal if data missing
-            if(!data['Gender'] || !data['Date of Birth']) openModal();
-
-            // Load Batches
+            if(!data['Gender'] || !data['Date of Birth']) openEditModal();
             loadBatches(data['Batches'] || []);
         }
 
@@ -186,14 +182,19 @@
             container.innerHTML = "";
             for(const bid of ids) {
                 const bdoc = await db.collection("Batches").doc(bid).get();
-                const b = bdoc.data() || { "Batch name": "NEET Prep", "Timing": "Morning" };
+                const b = bdoc.data();
+                if(!b) continue;
+
+                const isActive = b['Status'] === "Active";
+                const statusHtml = isActive 
+                    ? `<span class="status-tag status-active">● Active</span>`
+                    : `<span class="status-tag status-ended">● Ended</span>`;
+
                 container.innerHTML += `
                     <div class="card">
-                        <span class="batch-title">
-                            ${b['Batch name']} 
-                            <span class="special-tag">Special</span>
-                        </span>
-                        <div class="info-row"><span class="info-label">Batch timing</span><span class="info-value">${b['Timing'] || 'Morning'}</span></div>
+                        ${statusHtml}
+                        <span class="batch-name-title">${b['Batch Name']}</span>
+                        <div class="info-row"><span class="info-label">Batch timing</span><span class="info-value">${b['Timing'] || '-'}</span></div>
                         <div class="info-row"><span class="info-label">Batch name</span><span class="info-value">${bid}</span></div>
                         <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">31-07-2026</span></div>
                         <div class="info-row"><span class="info-label">Form Id</span><span class="info-value">2461325010</span></div>
@@ -202,15 +203,18 @@
             }
         }
 
-        function openModal() {
-            const overlay = document.getElementById('modalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => document.getElementById('modalSheet').classList.add('show'), 10);
+        // Modal Helpers
+        function openEditModal() { 
+            document.getElementById('editOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('editSheet').classList.add('show'), 10);
         }
-
-        function closeModal() {
-            document.getElementById('modalSheet').classList.remove('show');
-            setTimeout(() => document.getElementById('modalOverlay').style.display = 'none', 300);
+        function openSupportModal() {
+            document.getElementById('supportOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
+        }
+        function closeModals() {
+            document.querySelectorAll('.modal-sheet').forEach(s => s.classList.remove('show'));
+            setTimeout(() => document.querySelectorAll('.modal-overlay').forEach(o => o.style.display = 'none'), 300);
         }
 
         function setGen(val, el) {
@@ -222,17 +226,15 @@
         async function saveDetails() {
             const dob = document.getElementById('inpDOB').value;
             const blood = document.getElementById('inpBlood').value;
-            
-            if(!dob || !currentGender) return alert("Please fill Gender and DOB");
+            if(!dob || !currentGender) return alert("Please complete Gender and DOB");
 
             await db.collection("Accounts").doc(docId).update({
                 "Date of Birth": dob,
                 "Gender": currentGender,
                 "Blood Group": blood
             });
-            
-            closeModal();
-            init(); // Refresh data
+            closeModals();
+            init();
         }
 
         init();
