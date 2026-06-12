@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <style>
+        #profile-container { max-width: 500px; margin: 20px auto; border: 1px solid #ccc; padding: 20px; }
+        .field { margin-bottom: 10px; }
+        label { font-weight: bold; display: block; }
+    </style>
+</head>
+<body id="dynamicBody">
+    <div id="profile-container">
+        <h1>Profile</h1>
+        <div id="userData">Loading...</div>
+        <hr>
+        <button onclick="window.location.href='3.html'">View Picture Only</button>
+        <button onclick="window.location.href='4.html'" style="color:red">Logout</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+
+    <script>
+        // 1. Handle URL Parameters: 2.html?all=font=<15px>&colour=<#000>
+        const params = new URLSearchParams(window.location.search);
+        const fontParam = params.get('font'); // Extract <15px>
+        const colorParam = params.get('colour'); // Extract <#000>
+
+        if(fontParam) {
+            document.body.style.fontSize = fontParam.replace(/[<>]/g, '');
+        }
+        if(colorParam) {
+            document.body.style.color = colorParam.replace(/[<>]/g, '');
+        }
+
+        // 2. Fetch Data
+        const docId = localStorage.getItem("userDocId");
+        if(!docId) window.location.href = "1.html";
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        db.collection("Accounts").doc(docId).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('userData').innerHTML = `
+                    <div class="field"><label>Name:</label> ${data['Full Name']}</div>
+                    <div class="field"><label>Email:</label> ${data['Email']}</div>
+                    <div class="field"><label>Type:</label> ${data['Type']}</div>
+                    <div class="field"><label>Phone:</label> ${data['Phone Number']}</div>
+                    <img src="${data['Profile Picture']}" width="100">
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
