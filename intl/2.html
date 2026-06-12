@@ -4,63 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Details</title>
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
     <style>
-        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; background-color: white; color: #1a1a1a; }
+        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: white; color: #1a1a1a; overflow-x: hidden; }
         
-        /* Layout */
+        /* Header & Profile */
         .header { display: flex; align-items: center; padding: 20px 15px; position: sticky; top: 0; background: white; z-index: 10; }
         .back-btn { font-size: 24px; margin-right: 15px; text-decoration: none; color: #333; }
-        .header h2 { margin: 0; font-size: 18px; font-weight: 600; }
-
-        .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
-        .avatar-circle { width: 90px; height: 90px; border-radius: 50%; border: 1px solid #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-text h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .profile-header { padding: 10px 20px 30px; display: flex; align-items: center; gap: 20px; }
+        .avatar { width: 90px; height: 90px; border-radius: 50%; border: 1px solid #ddd; object-fit: cover; }
+        .profile-text h1 { margin: 0; font-size: 22px; }
         .profile-text p { margin: 5px 0; color: var(--text-gray); font-size: 15px; }
-        .enrolled-badge { display: inline-block; background: #2b2b2b; color: white; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .badge { background: #2b2b2b; color: white; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
 
-        .content { background: var(--bg-gray); padding: 15px; border-radius: 25px 25px 0 0; min-height: 80vh; }
-        .card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: var(--card-shadow); }
-        .card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .card-title-row h3 { margin: 0; font-size: 15px; color: var(--text-gray); font-weight: 500; }
+        /* Content Cards */
+        .content { background: var(--bg-gray); padding: 20px 15px; border-radius: 30px 30px 0 0; min-height: 100vh; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-head h3 { margin: 0; font-size: 15px; color: var(--text-gray); font-weight: 500; }
         .edit-btn { color: var(--primary-blue); font-size: 14px; font-weight: 600; cursor: pointer; }
 
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-        .info-label { color: var(--text-gray); }
-        .info-value { font-weight: 500; text-align: right; color: #1a1a1a; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .row .val { font-weight: 500; text-align: right; }
+        .row .lbl { color: var(--text-gray); }
 
-        /* Batch Styling */
-        .batch-title { font-weight: bold; font-size: 14px; display: block; margin-bottom: 15px; line-height: 1.4; padding-right: 70px; position: relative; }
-        .status-dot { position: absolute; right: 0; top: 0; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
-        .status-active { color: #28a745; }
-        .status-ended { color: #dc3545; }
+        /* Batch Specific */
+        .batch-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; display: block; line-height: 1.4; }
+        .status { float: right; font-size: 12px; font-weight: bold; }
+        .status.active { color: #28a745; }
+        .status.ended { color: #dc3545; }
 
         /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
-        .modal-sheet { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s; }
-        .modal-sheet.show { transform: translateY(0); }
-        .close-circle { background: #f0f0f0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; float: right; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
+        .sheet { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: 0.3s; }
+        .sheet.show { transform: translateY(0); }
+        .close-btn { float: right; cursor: pointer; font-size: 20px; background: #eee; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
 
         /* Support Modal Specific */
-        .support-body { text-align: left; padding: 20px 0; }
-        .support-icon { width: 80px; margin-bottom: 20px; }
-        .support-body h2 { font-size: 20px; margin-bottom: 10px; }
-        .support-body p { color: var(--text-gray); margin-bottom: 30px; }
-
-        /* Editor Modal Specific */
-        .field-group { margin-bottom: 20px; text-align: left; }
-        .field-group label { display: block; font-weight: 600; margin-bottom: 10px; }
-        .custom-input { width: 100%; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; font-size: 16px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; }
-        .choice-btn { flex: 1; padding: 15px; border: 1.5px solid #e0e0e0; border-radius: 15px; background: white; cursor: pointer; }
-        .choice-btn.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); font-weight: 600; }
-
-        .action-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .support-ui { text-align: center; }
+        .bell-img { width: 120px; margin-bottom: 20px; }
+        .support-ui h2 { font-size: 20px; margin-bottom: 10px; }
+        .support-ui p { color: var(--text-gray); margin-bottom: 30px; }
+        
+        /* Form UI */
+        .input-f { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; margin-top: 8px; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .opt { flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 12px; background: white; cursor: pointer; }
+        .opt.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); }
+        .main-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 18px; border-radius: 40px; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -71,166 +65,158 @@
     </div>
 
     <div class="profile-header">
-        <div class="avatar-circle"><img id="uPic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"></div>
+        <img id="uPic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar">
         <div class="profile-text">
-            <h1 id="uName">...</h1>
+            <h1 id="uName">Loading...</h1>
             <p id="uClass">Class - | -</p>
-            <span class="enrolled-badge">ENROLLED STUDENT</span>
+            <span class="badge">ENROLLED STUDENT</span>
         </div>
     </div>
 
     <div class="content">
-        <!-- Contact Details -->
+        <!-- Contact -->
         <div class="card">
-            <div class="card-title-row"><h3>Contact Details</h3> <span class="edit-btn" onclick="openSupport('change your phone number or email')">Edit</span></div>
-            <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value" id="uPhone">-</span></div>
-            <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="uEmail">-</span></div>
+            <div class="card-head"><h3>Contact Details</h3> <span class="edit-btn" onclick="openSupport()">Edit</span></div>
+            <div class="row"><span class="lbl">Phone Number</span><span class="val" id="uPhone">-</span></div>
+            <div class="row"><span class="lbl">Email</span><span class="val" id="uEmail">-</span></div>
         </div>
 
-        <!-- Student Details - THE ONLY ONE EDITABLE -->
+        <!-- Student - ONLY ONE WITH FUNCTIONAL EDIT -->
         <div class="card">
-            <div class="card-title-row"><h3>Student Details</h3> <span class="edit-btn" onclick="openEditor()">Edit</span></div>
-            <div class="info-row"><span class="info-label">Gender</span><span class="info-value" id="uGender">-</span></div>
-            <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value" id="uBlood">-</span></div>
-            <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value" id="uDOB">-</span></div>
+            <div class="card-head"><h3>Student Details</h3> <span class="edit-btn" onclick="openEdit()">Edit</span></div>
+            <div class="row"><span class="lbl">Gender</span><span class="val" id="uGen">-</span></div>
+            <div class="row"><span class="lbl">Blood Group</span><span class="val" id="uBlood">-</span></div>
+            <div class="row"><span class="lbl">Date of Birth</span><span class="val" id="uDOB">-</span></div>
         </div>
 
-        <!-- Parent Details -->
+        <!-- Parent -->
         <div class="card">
-            <div class="card-title-row"><h3>Parent Details</h3> <span class="edit-btn" onclick="openSupport('change your parents name & phone number')">Edit</span></div>
-            <div class="info-row"><span class="info-label">Name</span><span class="info-value" id="uGuard">-</span></div>
-            <div class="info-row"><span class="info-label">Contact number</span><span class="info-value">-</span></div>
+            <div class="card-head"><h3>Parent Details</h3> <span class="edit-btn" onclick="openSupport()">Edit</span></div>
+            <div class="row"><span class="lbl">Name</span><span class="val" id="uGuard">-</span></div>
+            <div class="row"><span class="lbl">Contact number</span><span class="val" id="uGPhone">-</span></div>
         </div>
 
-        <h3 style="margin: 20px 5px 10px; font-size: 16px; color: #444;">Batch details</h3>
+        <h3 style="margin: 20px 5px 10px; font-size: 15px; color: #555;">Batch details</h3>
         <div id="batchContainer"></div>
     </div>
 
-    <!-- SUPPORT MODAL -->
-    <div class="modal-overlay" id="supportOverlay">
-        <div class="modal-sheet" id="supportSheet">
-            <div class="close-circle" onclick="closeModals()">✕</div>
-            <div class="support-body">
-                <img src="https://img.icons8.com/color/144/bell.png" class="support-icon">
-                <h2 id="supportTitle">Want to change details?</h2>
-                <p>Please call our customer support</p>
-                <button class="action-btn" onclick="window.location.href='tel:8005811475'">Call us</button>
+    <!-- Modal 1: Edit Student Details -->
+    <div class="overlay" id="editOverlay">
+        <div class="sheet" id="editSheet">
+            <span class="close-btn" onclick="closeModals()">✕</span>
+            <h2 style="font-size: 24px; margin-bottom: 25px;">Complete Your Profile</h2>
+            <label style="font-weight: 600;">DOB</label>
+            <input type="date" class="input-f" id="inpDOB">
+            
+            <label style="font-weight: 600;">Gender</label>
+            <div class="btn-group">
+                <button class="opt" onclick="setG('Male', this)">Male</button>
+                <button class="opt" onclick="setG('Female', this)">Female</button>
+                <button class="opt" onclick="setG('Other', this)">Other</button>
             </div>
+
+            <label style="font-weight: 600;">Blood group</label>
+            <select class="input-f" id="inpBlood">
+                <option value="">Select one</option>
+                <option>A+</option><option>B+</option><option>O+</option><option>AB+</option>
+            </select>
+            <button class="main-btn" onclick="saveData()">Submit</button>
         </div>
     </div>
 
-    <!-- EDITOR MODAL -->
-    <div class="modal-overlay" id="editOverlay">
-        <div class="modal-sheet" id="editSheet">
-            <div class="close-circle" onclick="closeModals()">✕</div>
-            <h2 style="margin-bottom:25px">Complete Your Profile</h2>
-            <div class="field-group">
-                <label>DOB</label>
-                <input type="date" class="custom-input" id="inpDOB">
+    <!-- Modal 2: Support Alert (Bell) -->
+    <div class="overlay" id="supportOverlay">
+        <div class="sheet" id="supportSheet">
+            <span class="close-btn" onclick="closeModals()">✕</span>
+            <div class="support-ui">
+                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="bell-img">
+                <h2>Want to change your parents name & phone number</h2>
+                <p>Please call our customer support</p>
+                <button class="main-btn" onclick="window.location.href='tel:8005811475'">Call us</button>
             </div>
-            <div class="field-group">
-                <label>Gender</label>
-                <div class="btn-group">
-                    <button class="choice-btn" onclick="setGen('Male', this)">Male</button>
-                    <button class="choice-btn" onclick="setGen('Female', this)">Female</button>
-                    <button class="choice-btn" onclick="setGen('Other', this)">Other</button>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Blood group</label>
-                <select class="custom-input" id="inpBlood">
-                    <option value="">Select one</option>
-                    <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
-                </select>
-            </div>
-            <button class="action-btn" onclick="saveData()">Submit</button>
         </div>
     </div>
 
     <script>
-        const docId = localStorage.getItem("userDocId");
-        if(!docId) window.location.href = "1.html";
+        const uid = localStorage.getItem("userDocId");
+        if(!uid) window.location.href = "1.html";
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let currentGender = "";
+        let selGender = "", globalAccKey = "";
 
-        async function init() {
-            const doc = await db.collection("Accounts").doc(docId).get();
+        async function load() {
+            const doc = await db.collection("Accounts").doc(uid).get();
             if(!doc.exists) return;
-            const data = doc.data();
+            const d = doc.data();
+            globalAccKey = d['Account Keys'] || d['Acoount Keys'] || uid;
 
-            document.getElementById('uName').innerText = data['Full Name'];
-            document.getElementById('uClass').innerText = (data['Class'] || '12+') + " | NEET";
-            document.getElementById('uPhone').innerText = data['Phone Number'];
-            document.getElementById('uEmail').innerText = data['Email'];
-            document.getElementById('uGender').innerText = data['Gender'] || '-';
-            document.getElementById('uBlood').innerText = data['Blood Group'] || '-';
-            document.getElementById('uDOB').innerText = data['Date of Birth'] || '-';
-            document.getElementById('uGuard').innerText = data['Guardians'] || '-';
-            if(data['Profile Picture']) document.getElementById('uPic').src = data['Profile Picture'];
+            document.getElementById('uName').innerText = d['Full Name'];
+            document.getElementById('uClass').innerText = (d['Class'] || '12+') + " Plus | NEET";
+            document.getElementById('uPhone').innerText = d['Phone Number'];
+            document.getElementById('uEmail').innerText = d['Email'];
+            document.getElementById('uGen').innerText = d['Gender'] || '-';
+            document.getElementById('uBlood').innerText = d['Blood Group'] || '-';
+            document.getElementById('uDOB').innerText = d['Date of Birth'] || '-';
+            document.getElementById('uGuard').innerText = d['Guardians'] || '-';
+            document.getElementById('uGPhone').innerText = d['Guardian Phone Number'] || '-';
+            if(d['Profile Picture']) document.getElementById('uPic').src = d['Profile Picture'];
 
-            if(!data['Gender'] || !data['Date of Birth']) openEditor();
-            loadBatches(data['Batches'] || []);
+            if(!d['Gender']) openEdit();
+            fetchBatches(d['Batches'] || []);
         }
 
-        async function loadBatches(ids) {
+        async function fetchBatches(ids) {
             const container = document.getElementById('batchContainer');
             container.innerHTML = "";
-            for(const bid of ids) {
+            for(let bid of ids) {
                 const bdoc = await db.collection("Batches").doc(bid).get();
-                if(!bdoc.exists) continue;
-                const b = bdoc.data();
-                
-                const statusHtml = b['Status'] === 'Active' 
-                    ? `<span class="status-dot status-active">● Active</span>` 
-                    : `<span class="status-dot status-ended">● Ended</span>`;
-
-                container.innerHTML += `
-                    <div class="card">
-                        <span class="batch-title">${b['Batch Name']} ${statusHtml}</span>
-                        <div class="info-row"><span class="info-label">Batch name</span><span class="info-value">${bid}</span></div>
-                        <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">31-07-2026</span></div>
-                        <div class="info-row"><span class="info-label">Key</span><span class="info-value">${bid}</span></div>
-                    </div>
-                `;
+                if(bdoc.exists) {
+                    const b = bdoc.data();
+                    const statusClass = b['Status'] === 'Active' ? 'active' : 'ended';
+                    const statusText = b['Status'] === 'Active' ? '• Active' : '• Ended';
+                    
+                    container.innerHTML += `
+                        <div class="card">
+                            <span class="status ${statusClass}">${statusText}</span>
+                            <span class="batch-title">${b['Batch Name']}</span>
+                            <div class="row"><span class="lbl">Batch name</span><span class="val">${bid}</span></div>
+                            <div class="row"><span class="lbl">Valid Till</span><span class="val">${b['From'] || '31/07/2026'}</span></div>
+                            <div class="row"><span class="lbl">Form Id</span><span class="val">${globalAccKey}</span></div>
+                        </div>
+                    `;
+                }
             }
         }
 
-        function openSupport(reason) {
-            document.getElementById('supportTitle').innerText = "Want to " + reason + "?";
-            document.getElementById('supportOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
+        function openEdit() { toggleModal('editOverlay', 'editSheet', true); }
+        function openSupport() { toggleModal('supportOverlay', 'supportSheet', true); }
+        function closeModals() { 
+            toggleModal('editOverlay', 'editSheet', false); 
+            toggleModal('supportOverlay', 'supportSheet', false); 
         }
 
-        function openEditor() {
-            document.getElementById('editOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('editSheet').classList.add('show'), 10);
+        function toggleModal(ov, sh, show) {
+            const o = document.getElementById(ov), s = document.getElementById(sh);
+            if(show) { o.style.display = 'flex'; setTimeout(()=> s.classList.add('show'), 10); }
+            else { s.classList.remove('show'); setTimeout(()=> o.style.display = 'none', 300); }
         }
 
-        function closeModals() {
-            document.querySelectorAll('.modal-sheet').forEach(s => s.classList.remove('show'));
-            setTimeout(() => document.querySelectorAll('.modal-overlay').forEach(o => o.style.display = 'none'), 300);
-        }
-
-        function setGen(val, el) {
-            currentGender = val;
-            document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
+        function setG(v, btn) {
+            selGender = v;
+            document.querySelectorAll('.opt').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
 
         async function saveData() {
             const dob = document.getElementById('inpDOB').value;
-            const blood = document.getElementById('inpBlood').value;
-            if(!dob || !currentGender) return alert("Please fill Gender and DOB");
-            await db.collection("Accounts").doc(docId).update({
-                "Date of Birth": dob, "Gender": currentGender, "Blood Group": blood
-            });
-            closeModals();
-            init();
+            const bld = document.getElementById('inpBlood').value;
+            if(!dob || !selGender) return alert("Fill all fields");
+            await db.collection("Accounts").doc(uid).update({ "Date of Birth": dob, "Gender": selGender, "Blood Group": bld });
+            closeModals(); load();
         }
 
-        init();
+        load();
     </script>
 </body>
 </html>
