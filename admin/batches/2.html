@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Enrollment...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+</head>
+<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen">
+
+    <div id="statusBox" class="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+        <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <h2 id="statusTitle" class="text-xl font-semibold mb-2">Processing Course...</h2>
+        <p id="statusMsg" class="text-gray-600">Please wait while we verify your coupon code.</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function processEnrollment() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get('student');
+            const couponCode = urlParams.get('cc');
+            const batchId = urlParams.get('batches');
+
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMsg = document.getElementById('statusMsg');
+            const loader = document.getElementById('loader');
+
+            if (!studentId || !couponCode || !batchId) {
+                showError("Invalid URL Parameters. Missing Data.");
+                return;
+            }
+
+            try {
+                // 1. Verify Coupon
+                const couponRef = doc(db, "coupons", couponCode);
+                const couponSnap = await getDoc(couponRef);
+
+                if (!couponSnap.exists()) {
+                    showError("Invalid Coupon Code.");
+                    return;
+                }
+
+                const couponData = couponSnap.data();
+                const today = new Date().toISOString().split('T')[0];
+
+                // 2. Validations
+                if (couponData.batchId !== batchId) {
+                    showError("This coupon is not valid for this batch.");
+                    return;
+                }
+                if (today > couponData.validity) {
+                    showError("Coupon has expired.");
+                    return;
+                }
+                if (couponData.usedCount >= couponData.maxUsage) {
+                    showError("Coupon limit reached.");
+                    return;
+                }
+
+                // 3. Save Enrollment to Student Account
+                // Path: accounts > {studentId} > enrolled_batches > {batchId}
+                await setDoc(doc(db, "accounts", studentId, "enrolled_batches", batchId), {
+                    batchId: batchId,
+                    couponUsed: couponCode,
+                    enrolledDate: new Date().toISOString(),
+                    status: "active"
+                });
+
+                // 4. Update Coupon Usage Count
+                await updateDoc(couponRef, {
+                    usedCount: increment(1)
+                });
+
+                // Success UI
+                loader.classList.add('hidden');
+                statusTitle.innerText = "Enrollment Successful!";
+                statusTitle.classList.add('text-green-600');
+                statusMsg.innerText = `You have been added to ${batchId}`;
+
+            } catch (error) {
+                console.error(error);
+                showError("System Error: " + error.message);
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('statusTitle').innerText = "Failed";
+            document.getElementById('statusTitle').classList.add('text-red-600');
+            document.getElementById('statusMsg').innerText = msg;
+        }
+
+        // Start processing on load
+        processEnrollment();
+    </script>
+</body>
+</html>
