@@ -3,116 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolling Student...</title>
+    <title>Enrollment Success</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Your Firebase Config -->
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
-</head>
-<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen">
+    <style>
+        /* Animation Styles */
+        .anim-container { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+        
+        /* Certificate sliding down */
+        @keyframes certIn {
+            0% { transform: translateY(-50px) scale(0.8); opacity: 0; }
+            50% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(40px) scale(0.5); opacity: 0; }
+        }
+        #certificate {
+            animation: certIn 2s ease-in-out forwards;
+            position: absolute; top: 20px; left: 45px;
+        }
 
-    <div id="statusBox" class="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm">
-        <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <h2 id="statusTitle" class="text-xl font-bold mb-2">Processing Enrollment</h2>
-        <p id="statusMsg" class="text-gray-500">Checking coupon and batch details...</p>
+        /* Bag slight shake when cert enters */
+        @keyframes bagJump {
+            0%, 70%, 100% { transform: scale(1); }
+            85% { transform: scale(1.05); }
+        }
+        #backpack {
+            animation: bagJump 2s ease-in-out forwards;
+            position: absolute; bottom: 10px; left: 25px;
+        }
+
+        /* Checkmark pop */
+        @keyframes popCheck {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+        #success-tick {
+            display: none;
+            animation: popCheck 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: absolute; top: 40px; left: 40px;
+        }
+
+        .fade-in { animation: fadeIn 1s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-blue-50 flex flex-col items-center justify-center min-h-screen font-sans p-6">
+
+    <div id="main-card" class="bg-white p-10 rounded-3xl shadow-2xl text-center max-w-md w-full">
+        
+        <!-- SVG Animation Area -->
+        <div id="animation-zone" class="anim-container mb-6">
+            <!-- Certificate SVG -->
+            <svg id="certificate" width="60" height="70" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+
+            <!-- Bag SVG -->
+            <svg id="backpack" width="100" height="100" viewBox="0 0 24 24" fill="#1e40af">
+                <path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z"></path>
+                <path d="M9 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="#1e40af" stroke-width="2"></path>
+                <rect x="8" y="12" width="8" height="6" rx="1" fill="#3b82f6"></rect>
+            </svg>
+
+            <!-- Success Tick SVG -->
+            <svg id="success-tick" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+
+        <!-- Text Area -->
+        <div id="loading-content">
+            <h2 class="text-xl font-bold text-gray-700 animate-pulse">Verifying Enrollment...</h2>
+        </div>
+
+        <div id="success-content" class="hidden fade-in">
+            <h1 class="text-2xl font-black text-gray-800 mb-2">Success!</h1>
+            <p id="personalized-msg" class="text-lg text-gray-600 leading-relaxed"></p>
+            <button onclick="window.location.reload()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition">View Dashboard</button>
+        </div>
+
+        <div id="error-content" class="hidden text-red-500 font-semibold"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { 
-            getFirestore, 
-            doc, 
-            getDoc, 
-            updateDoc, 
-            arrayUnion, 
-            increment 
-        } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-        // Initialize
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         async function processEnrollment() {
             const urlParams = new URLSearchParams(window.location.search);
-            const studentId = urlParams.get('student'); // e.g. XPRT2607063WE22
-            const couponCode = urlParams.get('cc');      // The generated code
-            const batchId = urlParams.get('batches');    // e.g. XPRTBTCH22805
-
-            const statusTitle = document.getElementById('statusTitle');
-            const statusMsg = document.getElementById('statusMsg');
-            const loader = document.getElementById('loader');
-
-            // 1. Check if URL parameters exist
-            if (!studentId || !couponCode || !batchId) {
-                showUI("Error", "Missing required info in URL.", "red");
-                return;
-            }
+            const studentId = urlParams.get('student');
+            const couponCode = urlParams.get('cc');
+            const batchId = urlParams.get('batches');
 
             try {
-                // 2. Verify the Coupon first
-                const couponRef = doc(db, "coupons", couponCode);
-                const couponSnap = await getDoc(couponRef);
-
-                if (!couponSnap.exists()) {
-                    showUI("Invalid Coupon", "This coupon code does not exist.", "red");
-                    return;
-                }
-
-                const couponData = couponSnap.data();
-                const today = new Date().toISOString().split('T')[0];
-
-                // 3. Coupon Validations
-                if (couponData.batchId !== batchId) {
-                    showUI("Mismatch", "Coupon not valid for this batch.", "red");
-                    return;
-                }
-                if (today > couponData.validity) {
-                    showUI("Expired", "This coupon has expired.", "red");
-                    return;
-                }
-                if (couponData.usedCount >= couponData.maxUsage) {
-                    showUI("Limit Reached", "Coupon usage limit has been reached.", "red");
-                    return;
-                }
-
-                // 4. Update the Student Account (Matches your Image Structure)
-                // Path: Accounts > {studentId}
+                // 1. Fetch Student Data
                 const studentRef = doc(db, "Accounts", studentId);
                 const studentSnap = await getDoc(studentRef);
+                
+                if (!studentSnap.exists()) throw new Error("Student account not found.");
+                const studentName = studentSnap.data()["Full Name"];
 
-                if (!studentSnap.exists()) {
-                    showUI("Account Not Found", `Student ID ${studentId} not found.`, "red");
-                    return;
-                }
+                // 2. Fetch Coupon and Batch Verification
+                const couponRef = doc(db, "coupons", couponCode);
+                const couponSnap = await getDoc(couponRef);
+                if (!couponSnap.exists()) throw new Error("Invalid Coupon.");
 
-                // Use arrayUnion to add the batchId into the 'Batches' array field
+                // 3. Update Database (Add batch to array)
                 await updateDoc(studentRef, {
                     "Batches": arrayUnion(batchId)
                 });
+                await updateDoc(couponRef, { usedCount: increment(1) });
 
-                // 5. Update Coupon usage count
-                await updateDoc(couponRef, {
-                    usedCount: increment(1)
-                });
-
-                showUI("Success!", `Successfully added to ${batchId}`, "green");
+                // 4. Trigger Animation & Success Message
+                startSuccessSequence(studentName, batchId, "Inspire Coaching Institute");
 
             } catch (error) {
-                console.error(error);
-                showUI("System Error", error.message, "red");
+                document.getElementById('loading-content').classList.add('hidden');
+                document.getElementById('error-content').innerText = error.message;
+                document.getElementById('error-content').classList.remove('hidden');
             }
         }
 
-        function showUI(title, msg, color) {
-            const statusTitle = document.getElementById('statusTitle');
-            const statusMsg = document.getElementById('statusMsg');
-            const loader = document.getElementById('loader');
-
-            loader.classList.add('hidden');
-            statusTitle.innerText = title;
-            statusMsg.innerText = msg;
-            
-            if(color === "red") statusTitle.className = "text-xl font-bold mb-2 text-red-600";
-            if(color === "green") statusTitle.className = "text-xl font-bold mb-2 text-green-600";
+        function startSuccessSequence(name, course, institute) {
+            // After 2 seconds (time for cert to go in bag)
+            setTimeout(() => {
+                document.getElementById('certificate').style.display = 'none';
+                document.getElementById('backpack').style.display = 'none';
+                document.getElementById('success-tick').style.display = 'block';
+                
+                document.getElementById('loading-content').classList.add('hidden');
+                document.getElementById('success-content').classList.remove('hidden');
+                
+                document.getElementById('personalized-msg').innerHTML = 
+                    `Hey <b>${name}</b>, you successfully enrolled in <b>${course}</b> by <b>${institute}</b>.`;
+            }, 2000);
         }
 
         processEnrollment();
