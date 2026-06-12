@@ -32,11 +32,11 @@
         .info-label { color: var(--text-gray); }
         .info-value { font-weight: 500; text-align: right; }
 
-        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; margin-bottom: 12px; display: block; width: 75%; }
-        .status-dot { font-size: 12px; font-weight: 700; float: right; margin-top: -30px; }
+        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; display: block; width: 75%; }
+        .by-text { font-size: 12px; color: #888; margin: 4px 0 15px 0; font-weight: 500; }
+        .status-dot { font-size: 12px; font-weight: 700; float: right; margin-top: -18px; }
         .active-text { color: var(--green); }
         .ended-text { color: var(--red); }
-        .form-icon { width: 18px; height: 18px; vertical-align: middle; margin-left: 5px; border-radius: 3px; }
 
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
@@ -102,7 +102,7 @@
         <div id="batchContainer"></div>
     </div>
 
-    <!-- Support Modal (Universal) -->
+    <!-- Support Modal -->
     <div class="modal-overlay" id="supportModal">
         <div class="modal-sheet" id="supportSheet">
             <span class="close-x" onclick="closeModals()">✕</span>
@@ -137,7 +137,6 @@
                 <select class="inp" id="inpBlood">
                     <option value="">Select one</option>
                     <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
-                    <option>A-</option><option>O-</option><option>B-</option><option>AB-</option>
                 </select>
             </div>
             <button class="submit-btn" onclick="updateUser()">Submit</button>
@@ -183,20 +182,27 @@
                 const bdoc = await db.collection("Batches").doc(bid).get();
                 if(!bdoc.exists) continue;
                 const b = bdoc.data();
+
+                // Fetch Institution Name
+                let institutionName = "Institution";
+                if(b.Institution) {
+                    const idoc = await db.collection("Institutes").doc(b.Institution).get();
+                    if(idoc.exists) institutionName = idoc.data()['Full Name'];
+                }
+
                 const statusClass = b.Status === "Active" ? "active-text" : "ended-text";
                 
                 container.innerHTML += `
                     <div class="card">
-                        <span class="batch-name-title">${b['Batch Name']}</span>
                         <span class="status-dot ${statusClass}">• ${b.Status || 'Active'}</span>
+                        <span class="batch-name-title">${b['Batch Name']}</span>
+                        <div class="by-text">by ${institutionName}</div>
+
                         <div class="info-row"><span class="info-label">Batch name</span><span class="info-value">${bid}</span></div>
                         <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">31-07-2026</span></div>
                         <div class="info-row">
                             <span class="info-label">Form Id</span>
-                            <span class="info-value">
-                                ${globalAccountKey} 
-                                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="form-icon">
-                            </span>
+                            <span class="info-value">${globalAccountKey}</span>
                         </div>
                     </div>
                 `;
@@ -205,11 +211,10 @@
 
         function openSupport(type) { 
             const title = document.getElementById('supportTitle');
-            if(type === 'contact') {
-                title.innerText = "Want to change your Phone number and email";
-            } else {
-                title.innerText = "Want to change your parents name & phone number";
-            }
+            title.innerText = (type === 'contact') ? 
+                "Want to change your Phone number and email" : 
+                "Want to change your parents name & phone number";
+            
             document.getElementById('supportModal').style.display = 'flex';
             setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
         }
@@ -235,9 +240,7 @@
             const bl = document.getElementById('inpBlood').value;
             if(!dob || !selectedGender) return alert("Fill Gender and Date of Birth");
             await db.collection("Accounts").doc(docId).update({
-                "Date of Birth": dob,
-                "Gender": selectedGender,
-                "Blood Group": bl
+                "Date of Birth": dob, "Gender": selectedGender, "Blood Group": bl
             });
             closeModals();
             init();
@@ -246,4 +249,4 @@
         init();
     </script>
 </body>
-</html>
+            </html>
