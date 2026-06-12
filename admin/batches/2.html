@@ -2,107 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enrolling...</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body, html { height: 100%; overflow: hidden; margin: 0; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Animation Classes */
-        .cert-fly {
-            animation: flyIn 1.5s ease-in-out forwards;
-        }
-        
-        .bag-bounce {
-            animation: bounce 0.5s ease-in-out 1.2s;
+        /* Animation Container */
+        .stage { position: relative; width: 280px; height: 320px; margin: 0 auto; }
+
+        /* Backpack SVG Layers */
+        .bag-back { fill: #3B82F6; }
+        .bag-front { fill: #60A5FA; }
+        .bag-pocket { fill: #2DD4BF; }
+
+        /* Certificate Animation */
+        #certificate {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            z-index: 10;
+            transition: all 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
 
-        .check-draw {
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: draw 0.6s ease-out 1.8s forwards;
-        }
-
-        @keyframes flyIn {
-            0% { transform: translateY(-150px) scale(1); opacity: 0; }
-            50% { transform: translateY(0px) scale(1.1); opacity: 1; }
-            100% { transform: translateY(40px) scale(0); opacity: 0; }
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes draw {
-            to { stroke-dashoffset: 0; }
-        }
-
-        .fade-up {
+        .enrolled #certificate {
+            transform: translateY(120px) scale(0.6);
             opacity: 0;
-            transform: translateY(20px);
-            animation: fadeUp 0.8s ease-out 2.2s forwards;
         }
 
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
+        /* Success Checkmark */
+        #checkmark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 30;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+        .enrolled #checkmark { transform: translate(-50%, -50%) scale(1.2); }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Floating effect for bag */
+        .floating { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
     </style>
 </head>
-<body class="bg-blue-600 font-sans">
+<body class="bg-white h-screen w-full flex flex-col items-center justify-center p-6 text-center">
 
-    <!-- Loading Overlay -->
-    <div id="loaderScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid mx-auto mb-4"></div>
-            <p class="text-gray-600 font-medium">Securing your seat...</p>
-        </div>
-    </div>
-
-    <!-- Main Full Screen App UI -->
-    <div id="appScreen" class="hidden fixed inset-0 flex flex-col items-center justify-center p-6 text-center">
+    <div id="main-container" class="max-w-md w-full">
         
-        <!-- Animation Container -->
-        <div class="relative w-64 h-64 mb-8 flex items-center justify-center">
-            
-            <!-- Certificate SVG -->
-            <svg id="certIcon" class="absolute w-24 h-24 text-yellow-400 opacity-0" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z"></path>
-            </svg>
+        <!-- Illustration Stage -->
+        <div id="stage" class="stage mb-8">
+            <!-- The Certificate (Vector) -->
+            <div id="certificate">
+                <svg width="150" height="110" viewBox="0 0 150 110" fill="none">
+                    <rect width="150" height="110" rx="8" fill="white" stroke="#E2E8F0" stroke-width="4"/>
+                    <rect x="20" y="25" width="110" height="8" rx="4" fill="#CBD5E1"/>
+                    <rect x="20" y="45" width="80" height="8" rx="4" fill="#CBD5E1"/>
+                    <rect x="20" y="65" width="100" height="8" rx="4" fill="#CBD5E1"/>
+                    <circle cx="120" cy="80" r="15" fill="#FBBF24"/>
+                </svg>
+            </div>
 
-            <!-- Bag SVG -->
-            <svg id="bagIcon" class="w-40 h-40 text-white drop-shadow-2xl" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-            </svg>
+            <!-- The Backpack (Vector) -->
+            <div class="absolute inset-0 z-20 floating">
+                <svg viewBox="0 0 200 240" width="200" height="240" class="mx-auto mt-20">
+                    <!-- Main Body Back -->
+                    <path d="M40 60C40 26.8629 66.8629 0 100 0C133.137 0 160 26.8629 160 60V200H40V60Z" class="bag-back"/>
+                    <!-- Main Body Front -->
+                    <path d="M40 100C40 77.9086 57.9086 60 80 60H120C142.091 60 160 77.9086 160 100V210C160 226.569 146.569 240 130 240H70C53.4315 240 40 226.569 40 210V100Z" class="bag-front"/>
+                    <!-- Pocket -->
+                    <path d="M55 150C55 138.954 63.9543 130 75 130H125C136.046 130 145 138.954 145 150V200C145 211.046 136.046 220 125 220H75C63.9543 220 55 211.046 55 200V150Z" class="bag-pocket"/>
+                    <rect x="85" y="145" width="30" height="10" rx="5" fill="white" fill-opacity="0.5"/>
+                </svg>
+            </div>
 
-            <!-- Success Tick -->
-            <svg class="absolute w-20 h-20 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path class="check-draw" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-            </svg>
+            <!-- Checkmark (Success) -->
+            <div id="checkmark">
+                <div class="bg-green-500 rounded-full p-4 shadow-xl">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
         </div>
 
         <!-- Text Content -->
-        <div class="fade-up glass p-8 rounded-3xl shadow-2xl w-full max-w-sm">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Enrollment Successful!</h1>
-            <p id="enrollmentMessage" class="text-gray-600 leading-relaxed">
-                Hey <span id="userName" class="text-blue-600 font-bold">Student</span>,<br> 
-                you enrolled in <span id="courseName" class="font-bold text-gray-800">your course</span> <br>
-                by <span id="instName" class="font-bold text-gray-800">the Institute</span>.
+        <div id="loading-ui">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-gray-500 font-medium">Validating your enrollment...</p>
+        </div>
+
+        <div id="success-ui" class="hidden opacity-0 transition-opacity duration-1000">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Hey <span id="student-name" class="text-blue-600">User</span>!</h1>
+            <p class="text-gray-600 text-lg">
+                You have successfully enrolled in <br>
+                <span id="course-name" class="font-bold text-gray-900">...</span>
             </p>
-            <button onclick="window.close()" class="mt-6 w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">Go to Dashboard</button>
+            <p class="text-sm text-gray-400 mt-6">Provided by <span id="inst-name">Your Institute</span></p>
+            
+            <button onclick="window.close()" class="mt-8 bg-gray-100 text-gray-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition">
+                Go to Dashboard
+            </button>
+        </div>
+
+        <!-- Error UI -->
+        <div id="error-ui" class="hidden">
+            <div class="text-red-500 mb-4">
+                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800" id="error-msg">Process Failed</h2>
+            <button onclick="location.reload()" class="mt-4 text-blue-600 font-semibold underline">Try Again</button>
         </div>
 
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { 
+            getFirestore, doc, getDoc, updateDoc, arrayUnion, increment 
+        } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -113,58 +148,67 @@
             const couponCode = params.get('cc');
             const batchId = params.get('batches');
 
-            if (!studentId || !couponCode || !batchId) {
-                alert("Invalid Access Parameters");
-                return;
-            }
+            if (!studentId || !couponCode || !batchId) return showError("Invalid URL Parameters");
 
             try {
-                // 1. Fetch Student Data
-                const studentRef = doc(db, "Accounts", studentId);
-                const studentSnap = await getDoc(studentRef);
-
-                // 2. Fetch Coupon Data
+                // 1. Verify Coupon
                 const couponRef = doc(db, "coupons", couponCode);
                 const couponSnap = await getDoc(couponRef);
 
-                if (!studentSnap.exists() || !couponSnap.exists()) {
-                    throw new Error("Data not found in database");
-                }
-
-                const studentData = studentSnap.data();
+                if (!couponSnap.exists()) return showError("Coupon not found!");
                 const couponData = couponSnap.data();
 
-                // 3. Simple validation (Add more if needed)
-                if(couponData.usedCount >= couponData.maxUsage) throw new Error("Coupon Limit Reached");
+                // 2. Fetch Student Name and Batch Name simultaneously
+                const studentRef = doc(db, "Accounts", studentId);
+                const batchRef = doc(db, "Batches", batchId);
+                
+                const [studSnap, batchSnap] = await Promise.all([getDoc(studentRef), getDoc(batchRef)]);
 
-                // 4. Update Database
-                await updateDoc(studentRef, { "Batches": arrayUnion(batchId) });
-                await updateDoc(couponRef, { usedCount: increment(1) });
+                if (!studSnap.exists()) return showError("Student account not found!");
+                const studentData = studSnap.data();
+                const batchData = batchSnap.exists() ? batchSnap.data() : { name: batchId };
 
-                // 5. Success UI Update
-                document.getElementById('userName').innerText = studentData['Full Name'] || "Student";
-                document.getElementById('courseName').innerText = batchId; // You can fetch batch name if available
-                document.getElementById('instName').innerText = "Inspire Institute"; // Default or fetch from Institutes
+                // 3. Perform the Database Update
+                await updateDoc(studentRef, {
+                    "Batches": arrayUnion(batchId)
+                });
+                await updateDoc(couponRef, {
+                    usedCount: increment(1)
+                });
 
-                showAnimation();
+                // 4. Trigger Animation & UI
+                showSuccess(studentData['Full Name'], batchId);
 
             } catch (e) {
-                alert(e.message);
-                document.getElementById('loaderScreen').innerHTML = `<p class='text-red-500'>${e.message}</p>`;
+                console.error(e);
+                showError(e.message);
             }
         }
 
-        function showAnimation() {
-            document.getElementById('loaderScreen').classList.add('hidden');
-            document.getElementById('appScreen').classList.remove('hidden');
+        function showSuccess(name, course) {
+            document.getElementById('loading-ui').classList.add('hidden');
+            document.getElementById('student-name').innerText = name;
+            document.getElementById('course-name').innerText = course;
             
-            // Trigger animations
-            document.getElementById('certIcon').classList.add('cert-fly');
-            document.getElementById('bagIcon').classList.add('bag-bounce');
+            // Start Animation
+            document.getElementById('stage').classList.add('enrolled');
+            
+            // Show Text with fade
+            setTimeout(() => {
+                const successUI = document.getElementById('success-ui');
+                successUI.classList.remove('hidden');
+                setTimeout(() => successUI.classList.add('opacity-100'), 50);
+            }, 800);
         }
 
-        // Start
-        startProcess();
+        function showError(msg) {
+            document.getElementById('loading-ui').classList.add('hidden');
+            const errUI = document.getElementById('error-ui');
+            errUI.classList.remove('hidden');
+            document.getElementById('error-msg').innerText = msg;
+        }
+
+        window.onload = startProcess;
     </script>
 </body>
 </html>
