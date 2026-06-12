@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
     <style>
-        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; --green: #28a745; --red: #dc3545; }
+        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; --green-bg: #e8f5e9; --green-text: #2e7d32; --red-bg: #ffebee; --red-text: #c62828; }
         body { font-family: 'Inter', sans-serif; margin: 0; background-color: white; color: #1a1a1a; }
         
         .header { display: flex; align-items: center; padding: 20px 15px; position: sticky; top: 0; background: white; z-index: 10; }
@@ -32,11 +32,14 @@
         .info-label { color: var(--text-gray); }
         .info-value { font-weight: 500; text-align: right; }
 
-        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; display: block; width: 75%; }
+        /* Batch Styling */
+        .batch-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; flex: 1; }
         .by-text { font-size: 12px; color: #888; margin: 4px 0 15px 0; font-weight: 500; }
-        .status-dot { font-size: 12px; font-weight: 700; float: right; margin-top: -18px; }
-        .active-text { color: var(--green); }
-        .ended-text { color: var(--red); }
+        
+        .status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: capitalize; white-space: nowrap; }
+        .active-badge { background-color: var(--green-bg); color: var(--green-text); }
+        .ended-badge { background-color: var(--red-bg); color: var(--red-text); }
 
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
@@ -76,14 +79,12 @@
     </div>
 
     <div class="content">
-        <!-- Contact Details -->
         <div class="card">
             <div class="card-header"><h3>Contact Details</h3><span class="edit-btn" onclick="openSupport('contact')">Edit</span></div>
             <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value" id="uPhone">-</span></div>
             <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="uEmail">-</span></div>
         </div>
 
-        <!-- Student Details -->
         <div class="card">
             <div class="card-header"><h3>Student Details</h3><span class="edit-btn" onclick="openProfileEdit()">Edit</span></div>
             <div class="info-row"><span class="info-label">Gender</span><span class="info-value" id="uGender">-</span></div>
@@ -91,7 +92,6 @@
             <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value" id="uDOB">-</span></div>
         </div>
 
-        <!-- Parent Details -->
         <div class="card">
             <div class="card-header"><h3>Parent Details</h3><span class="edit-btn" onclick="openSupport('parent')">Edit</span></div>
             <div class="info-row"><span class="info-label">Name</span><span class="info-value" id="uGuard">-</span></div>
@@ -102,46 +102,10 @@
         <div id="batchContainer"></div>
     </div>
 
-    <!-- Support Modal -->
-    <div class="modal-overlay" id="supportModal">
-        <div class="modal-sheet" id="supportSheet">
-            <span class="close-x" onclick="closeModals()">✕</span>
-            <div class="support-ui">
-                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="support-icon">
-                <h2 id="supportTitle">Want to change your details</h2>
-                <p>Please call our customer support</p>
-                <button class="submit-btn" onclick="window.location.href='tel:8914756767'">Call us</button>
-            </div>
-        </div>
-    </div>
+    <!-- Modals (Support & Profile Edit) -->
+    <div class="modal-overlay" id="supportModal"><div class="modal-sheet" id="supportSheet"><span class="close-x" onclick="closeModals()">✕</span><div class="support-ui"><img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="support-icon"><h2 id="supportTitle">Details Change</h2><p>Please call our customer support</p><button class="submit-btn" onclick="window.location.href='tel:8914756767'">Call us</button></div></div></div>
 
-    <!-- Profile Edit Modal -->
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal-sheet" id="profileSheet">
-            <span class="close-x" onclick="closeModals()">✕</span>
-            <h2 style="margin-top:0">Complete Your Profile</h2>
-            <div class="field-group">
-                <label>DOB</label>
-                <input type="date" class="inp" id="inpDOB">
-            </div>
-            <div class="field-group">
-                <label>Gender</label>
-                <div class="gender-grid">
-                    <button class="gen-btn" onclick="setG('Male', this)">Male</button>
-                    <button class="gen-btn" onclick="setG('Female', this)">Female</button>
-                    <button class="gen-btn" onclick="setG('Other', this)">Other</button>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Blood group</label>
-                <select class="inp" id="inpBlood">
-                    <option value="">Select one</option>
-                    <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
-                </select>
-            </div>
-            <button class="submit-btn" onclick="updateUser()">Submit</button>
-        </div>
-    </div>
+    <div class="modal-overlay" id="profileModal"><div class="modal-sheet" id="profileSheet"><span class="close-x" onclick="closeModals()">✕</span><h2 style="margin-top:0">Complete Your Profile</h2><div class="field-group"><label>DOB</label><input type="date" class="inp" id="inpDOB"></div><div class="field-group"><label>Gender</label><div class="gender-grid"><button class="gen-btn" onclick="setG('Male', this)">Male</button><button class="gen-btn" onclick="setG('Female', this)">Female</button><button class="gen-btn" onclick="setG('Other', this)">Other</button></div></div><div class="field-group"><label>Blood group</label><select class="inp" id="inpBlood"><option value="">Select one</option><option>A+</option><option>O+</option><option>B+</option><option>AB+</option></select></div><button class="submit-btn" onclick="updateUser()">Submit</button></div></div>
 
     <script>
         const docId = localStorage.getItem("userDocId");
@@ -149,8 +113,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let selectedGender = "";
-        let globalAccountKey = "";
+        let selectedGender = "", globalAccountKey = "";
 
         async function init() {
             const doc = await db.collection("Accounts").doc(docId).get();
@@ -183,22 +146,23 @@
                 if(!bdoc.exists) continue;
                 const b = bdoc.data();
 
-                // Fetch Institution Name
                 let institutionName = "Institution";
                 if(b.Institution) {
                     const idoc = await db.collection("Institutes").doc(b.Institution).get();
                     if(idoc.exists) institutionName = idoc.data()['Full Name'];
                 }
 
-                const statusClass = b.Status === "Active" ? "active-text" : "ended-text";
+                const statusClass = b.Status === "Active" ? "active-badge" : "ended-badge";
                 
                 container.innerHTML += `
                     <div class="card">
-                        <span class="status-dot ${statusClass}">• ${b.Status || 'Active'}</span>
-                        <span class="batch-name-title">${b['Batch Name']}</span>
+                        <div class="batch-top">
+                            <span class="batch-name-title">${b['Batch Name']}</span>
+                            <span class="status-badge ${statusClass}">${b.Status || 'Active'}</span>
+                        </div>
                         <div class="by-text">by ${institutionName}</div>
 
-                        <div class="info-row"><span class="info-label">Batch name</span><span class="info-value">${bid}</span></div>
+                        <div class="info-row"><span class="info-label">Batch ID</span><span class="info-value">${bid}</span></div>
                         <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">31-07-2026</span></div>
                         <div class="info-row">
                             <span class="info-label">Form Id</span>
@@ -210,11 +174,9 @@
         }
 
         function openSupport(type) { 
-            const title = document.getElementById('supportTitle');
-            title.innerText = (type === 'contact') ? 
+            document.getElementById('supportTitle').innerText = (type === 'contact') ? 
                 "Want to change your Phone number and email" : 
                 "Want to change your parents name & phone number";
-            
             document.getElementById('supportModal').style.display = 'flex';
             setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
         }
@@ -237,10 +199,9 @@
 
         async function updateUser() {
             const dob = document.getElementById('inpDOB').value;
-            const bl = document.getElementById('inpBlood').value;
             if(!dob || !selectedGender) return alert("Fill Gender and Date of Birth");
             await db.collection("Accounts").doc(docId).update({
-                "Date of Birth": dob, "Gender": selectedGender, "Blood Group": bl
+                "Date of Birth": dob, "Gender": selectedGender, "Blood Group": document.getElementById('inpBlood').value
             });
             closeModals();
             init();
@@ -249,4 +210,4 @@
         init();
     </script>
 </body>
-            </html>
+    </html>
