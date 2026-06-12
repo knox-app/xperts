@@ -3,69 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Generate Coupon</title>
+    <title>Admin - Institute Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Your Provided Firebase Keys -->
+    <!-- Your Firebase Config File -->
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
+    <!-- Login UI -->
     <div id="loginSection" class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
-        <input type="text" id="adminIdInput" placeholder="Enter Admin ID" class="w-full p-2 border rounded mb-4">
-        <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-2 rounded">Login</button>
+        <h2 class="text-2xl font-bold mb-4 text-center">Institute Login</h2>
+        <input type="text" id="adminIdInput" placeholder="Enter Institute ID" class="w-full p-2 border rounded mb-4">
+        <button onclick="checkLogin()" id="loginBtn" class="w-full bg-blue-600 text-white py-2 rounded">Verify ID</button>
     </div>
 
+    <!-- Generator UI (Hidden by default) -->
     <div id="adminPanel" class="hidden bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-bold mb-4">Generate Coupon</h2>
+        <h2 id="welcomeText" class="text-xl font-bold mb-4 text-blue-600"></h2>
         
-        <label class="block mb-2">Select Batch</label>
+        <label class="block mb-1 text-sm font-medium">Select Batch</label>
         <select id="batchSelect" class="w-full p-2 border rounded mb-4">
-            <option value="BATCH_01">Batch 01 - Science</option>
-            <option value="BATCH_02">Batch 02 - Maths</option>
-            <option value="BATCH_03">Batch 03 - English</option>
+            <!-- Batches will load here from Firestore -->
+            <option value="">Loading Batches...</option>
         </select>
 
-        <label class="block mb-2">Validity Date</label>
+        <label class="block mb-1 text-sm font-medium">Validity Date</label>
         <input type="date" id="validity" class="w-full p-2 border rounded mb-4">
 
-        <label class="block mb-2">Usage Limit (No. of users)</label>
+        <label class="block mb-1 text-sm font-medium">Usage Limit</label>
         <input type="number" id="usageLimit" value="1" min="1" class="w-full p-2 border rounded mb-4">
 
-        <button onclick="generateAndSaveCoupon()" class="w-full bg-green-600 text-white py-2 rounded">Generate & Save</button>
+        <button onclick="generateAndSaveCoupon()" class="w-full bg-green-600 text-white py-2 rounded font-bold">Generate & Save Coupon</button>
         
-        <div id="result" class="mt-4 p-3 bg-gray-200 rounded hidden break-all font-mono text-center"></div>
+        <div id="result" class="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded hidden break-all font-mono text-center"></div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, getDocs, collection, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-        // Initialize Firebase using the config from your external JS file
-        // Assumes your xprtfb.js file defines a variable 'firebaseConfig'
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Check Login logic
-        window.checkLogin = function() {
+        // Function to check if ID exists in 'Institutes' collection
+        window.checkLogin = async function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const urlId = urlParams.get('id');
-            const inputId = document.getElementById('adminIdInput').value;
-            
-            if(urlId === "ALLENCIKTO4858" || inputId === "ALLENCIKTO4858") {
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-            } else {
-                alert("Invalid Admin ID");
+            const id = document.getElementById('adminIdInput').value || urlParams.get('id');
+
+            if(!id) return alert("Please enter an ID");
+
+            const btn = document.getElementById('loginBtn');
+            btn.innerText = "Verifying...";
+
+            try {
+                const instRef = doc(db, "Institutes", id);
+                const instSnap = await getDoc(instRef);
+
+                if (instSnap.exists()) {
+                    const data = instSnap.data();
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    document.getElementById('welcomeText').innerText = "Welcome, " + data['Full Name'];
+                    loadBatches();
+                } else {
+                    alert("Invalid Admin ID: " + id);
+                    btn.innerText = "Verify ID";
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error connecting to database");
             }
         };
 
-        // Auto-check URL parameter on load
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.get('id') === "ALLENCIKTO4858") checkLogin();
+        // Load Batches from your 'Batches' collection
+        async function loadBatches() {
+            const batchSelect = document.getElementById('batchSelect');
+            const querySnapshot = await getDocs(collection(db, "Batches"));
+            batchSelect.innerHTML = ""; // Clear loader
+            querySnapshot.forEach((doc) => {
+                let option = document.createElement("option");
+                option.value = doc.id;
+                option.text = doc.id; // Or doc.data().name if available
+                batchSelect.appendChild(option);
+            });
+        }
 
-        // Coupon Code Logic
+        // Coupon Logic
         window.generateAndSaveCoupon = async function() {
             const batch = document.getElementById('batchSelect').value;
             const validity = document.getElementById('validity').value;
@@ -77,28 +100,33 @@
             const d4 = Math.floor(1000 + Math.random() * 9000);
             const a2 = Array.from({length: 2}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
             const an4 = Math.random().toString(36).substring(2, 6).toUpperCase();
-            
             const couponCode = `${d4}XPRT${a2}CC${an4}`;
 
             try {
-                // Save to Firestore: batches > {batchName} > coupons > {code}
+                // Saving into 'coupons' collection
                 await setDoc(doc(db, "coupons", couponCode), {
                     code: couponCode,
                     batchId: batch,
                     validity: validity,
                     maxUsage: parseInt(limit),
-                    usedCount: 0,
-                    createdAt: new Date().toISOString()
+                    usedCount: 0
                 });
 
                 const resDiv = document.getElementById('result');
-                resDiv.innerText = "Generated: " + couponCode;
+                resDiv.innerText = "COUPON: " + couponCode;
                 resDiv.classList.remove('hidden');
-                alert("Coupon Saved to Firestore!");
+                alert("Coupon Generated Successfully!");
             } catch (e) {
-                console.error("Error saving coupon: ", e);
+                alert("Error saving coupon");
             }
         };
+
+        // Auto-run if ID is in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('id')) {
+            document.getElementById('adminIdInput').value = urlParams.get('id');
+            checkLogin();
+        }
     </script>
 </body>
 </html>
