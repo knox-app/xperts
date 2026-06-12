@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Course & Class</title>
+    <style>
+        /* Modern UI/UX CSS */
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --text-main: #2B3674;
+            --text-muted: #A3AED0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-main);
+            font-size: 24px;
+            margin: 0 0 5px 0;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Loading Spinner */
+        #loader {
+            text-align: center;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 50px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Card Styles for Batches and Subjects */
+        .list-container {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.15);
+            border-color: var(--primary);
+        }
+
+        .item-title {
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .item-subtitle {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .arrow-icon {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="loader">
+            <div class="spinner"></div>
+            Fetching your details...
+        </div>
+
+        <!-- BATCH SELECTION VIEW (Dikhega agar 1 se zyada courses hain) -->
+        <div id="batch-view" class="list-container">
+            <div class="header">
+                <h1 id="user-greeting">Welcome!</h1>
+                <p>Please select your course/batch to continue</p>
+            </div>
+            <div id="batch-list">
+                <!-- Batches will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- SUBJECT SELECTION VIEW (Classes dikhane ke liye) -->
+        <div id="subject-view" class="list-container">
+            <button class="back-btn" id="back-to-batches" style="display: none;" onclick="showBatches()">
+                ← Back to Courses
+            </button>
+            <div class="header">
+                <h1 id="selected-batch-title">Classes</h1>
+                <p>Select a subject to proceed to your dashboard</p>
+            </div>
+            <div id="subject-list">
+                <!-- Subjects will be injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Your remote config -->
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+
+    <script>
+        // Check if user is logged in
+        const userId = localStorage.getItem("userDocId");
+        if (!userId) {
+            window.location.href = "login.html"; // Agar login nahi hai, wapas login pe bhej do
+        }
+
+        // Initialize Firebase
+        if (typeof firebaseConfig !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // Global Variables
+        let userBatchesArray = []; // Store batches data
+        let currentSelectedBatchId = null;
+        let currentSelectedBatchName = null;
+
+        // Start Fetching Data
+        window.onload = async () => {
+            try {
+                // 1. Get user document from 'Accounts' collection
+                const userDoc = await db.collection("Accounts").doc(userId).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const batchIds = userData.Batches || [];
+                    
+                    document.getElementById('user-greeting').innerText = `Welcome, ${userData['Full Name'] || 'Student'}!`;
+
+                    // 2. Logic based on number of batches
+                    if (batchIds.length === 0) {
+                        document.getElementById('loader').innerHTML = "No courses assigned to your account.";
+                    } 
+                    else if (batchIds.length === 1) {
+                        // User ne sirf 1 course join kiya hai
+                        await loadSingleBatchSubjects(batchIds[0]);
+                    } 
+                    else {
+                        // User ne 1 se zyada courses join kiye hain
+                        await loadMultipleBatches(batchIds);
+                    }
+                } else {
+                    document.getElementById('loader').innerHTML = "User data not found. Please contact admin.";
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('loader').innerHTML = "Error loading data. Please check your connection.";
+            }
+        };
+
+        // --- Function: Load Multiple Batches ---
+        async function loadMultipleBatches(batchIds) {
+            const batchListDiv = document.getElementById('batch-list');
+            batchListDiv.innerHTML = ''; // clear
+
+            for (const bId of batchIds) {
+                const bDoc = await db.collection("Batches").doc(bId).get();
+                if (bDoc.exists) {
+                    const bData = bDoc.data();
+                    
+                    // Create Card
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div>
+                            <p class="item-title">${bData['Batch Name']}</p>
+                            <p class="item-subtitle">Class: ${bData['Class']} | Type: ${bData['Batch Type']}</p>
+                        </div>
+                        <div class="arrow-icon">→</div>
+                    `;
+                    
+                    // On Click Batch -> Show Subjects
+                    card.onclick = () => {
+                        currentSelectedBatchId = bDoc.id;
+                        currentSelectedBatchName = bData['Batch Name'];
+                        renderSubjects(bData['Subjects'], true);
+                    };
+
+                    batchListDiv.appendChild(card);
+                }
+            }
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('batch-view').style.display = 'block';
+        }
+
+        // --- Function: Load Single Batch Directly ---
+        async function loadSingleBatchSubjects(batchId) {
+            const bDoc = await db.collection("Batches").doc(batchId).get();
+            if (bDoc.exists) {
+                const bData = bDoc.data();
+                currentSelectedBatchId = bDoc.id;
+                currentSelectedBatchName = bData['Batch Name'];
+                
+                // true = multiple batches (show back button), false = single batch (hide back button)
+                renderSubjects(bData['Subjects'], false); 
+            } else {
+                document.getElementById('loader').innerHTML = "Course details not found.";
+            }
+        }
+
+        // --- Function: Render Subjects ---
+        function renderSubjects(subjectsString, showBackButton) {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('batch-view').style.display = 'none';
+            
+            const subjectView = document.getElementById('subject-view');
+            const subjectList = document.getElementById('subject-list');
+            
+            document.getElementById('selected-batch-title').innerText = currentSelectedBatchName;
+            
+            // Back button logic (Sirf tab dikhega jab user ke paas multiple courses ho)
+            if (showBackButton) {
+                document.getElementById('back-to-batches').style.display = 'flex';
+            } else {
+                document.getElementById('back-to-batches').style.display = 'none';
+            }
+
+            subjectList.innerHTML = ''; // Clear previous subjects
+
+            // Aapke database me Subjects aese save hain: "Botany; Chemistry; Physics; Zoology"
+            // Isko split karke array banayenge
+            let subjectsArray = [];
+            if(subjectsString) {
+                subjectsArray = subjectsString.split(';').map(sub => sub.trim()).filter(sub => sub !== '');
+            }
+
+            if (subjectsArray.length === 0) {
+                subjectList.innerHTML = "<p>No classes available for this course yet.</p>";
+            } else {
+                subjectsArray.forEach(subject => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <p class="item-title">${subject}</p>
+                        <div class="arrow-icon">→</div>
+                    `;
+                    
+                    // ON CLICK SUBJECT -> Redirect to Dashboard
+                    card.onclick = () => {
+                        saveAndRedirect(subject);
+                    };
+                    
+                    subjectList.appendChild(card);
+                });
+            }
+
+            subjectView.style.display = 'block';
+        }
+
+        // --- Function: Back Button Action ---
+        function showBatches() {
+            document.getElementById('subject-view').style.display = 'none';
+            document.getElementById('batch-view').style.display = 'block';
+        }
+
+        // --- Function: Save Data and Send to Dashboard ---
+        function saveAndRedirect(subjectName) {
+            // Data save karo aage dashboard me use karne ke liye
+            localStorage.setItem("activeBatchId", currentSelectedBatchId);
+            localStorage.setItem("activeBatchName", currentSelectedBatchName);
+            localStorage.setItem("activeSubject", subjectName);
+            
+            // Redirect
+            window.location.href = "dashboard.html";
+        }
+
+    </script>
+</body>
+</html>
