@@ -3,36 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard</title>
+<title>Xperts Dashboard</title>
 
 <style>
 body{
+    background:#0f172a;
+    color:#fff;
     font-family:Arial,sans-serif;
-    background:#f5f5f5;
     padding:20px;
 }
-
 .card{
-    background:#fff;
-    padding:15px;
-    border-radius:10px;
+    background:#1e293b;
+    border-radius:12px;
+    padding:20px;
     margin-bottom:15px;
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
-
 .batch{
-    background:#e8f0ff;
+    background:#334155;
     padding:10px;
+    border-radius:8px;
     margin:5px 0;
-    border-radius:5px;
 }
-
 button{
-    background:red;
+    background:#ef4444;
     color:white;
     border:none;
-    padding:12px;
-    border-radius:5px;
+    padding:12px 18px;
+    border-radius:8px;
 }
 </style>
 </head>
@@ -40,54 +37,45 @@ button{
 
 <div class="card">
     <h2>Dashboard</h2>
-    <div id="name"></div>
-    <div id="class"></div>
+    <div id="onesignalStatus">Connecting...</div>
 </div>
 
 <div class="card">
     <h3>Your Batches</h3>
-    <div id="batches"></div>
-</div>
-
-<div class="card">
-    <h3>OneSignal Status</h3>
-    <div id="status">Starting...</div>
+    <div id="batchList"></div>
 </div>
 
 <button onclick="logout()">Logout</button>
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<!-- YOUR FIREBASE CONFIG -->
+<script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
 
 <script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const userData =
-JSON.parse(localStorage.getItem("userData") || "{}");
+const userDocId = localStorage.getItem("userDocId");
 
 const batches =
 JSON.parse(localStorage.getItem("userBatches") || "[]");
 
-if(!localStorage.getItem("userDocId")){
-    location.href="1.html";
-}
+const batchList =
+document.getElementById("batchList");
 
-document.getElementById("name").innerHTML =
-"<b>Name:</b> " + (userData["Full Name"] || "");
+batches.forEach(batch=>{
+    batchList.innerHTML +=
+    `<div class="batch">${batch}</div>`;
+});
+</script>
 
-document.getElementById("class").innerHTML =
-"<b>Class:</b> " + (userData["Class"] || "");
+<!-- OneSignal -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
-const batchContainer =
-document.getElementById("batches");
-
-if(batches.length===0){
-    batchContainer.innerHTML =
-    "No batches found";
-}else{
-    batches.forEach(batch=>{
-        batchContainer.innerHTML +=
-        `<div class="batch">${batch}</div>`;
-    });
-}
+<script>
 
 window.OneSignalDeferred =
 window.OneSignalDeferred || [];
@@ -97,40 +85,42 @@ OneSignalDeferred.push(async function(OneSignal){
     try{
 
         await OneSignal.init({
-            appId:"c842fd36-4de9-47e7-b7f6-74a75dc83445"
+            appId:"YOUR_ONESIGNAL_APP_ID"
         });
 
-        document.getElementById("status").innerHTML =
-        "OneSignal Connected<br>";
+        document.getElementById("onesignalStatus")
+        .innerHTML = "OneSignal Connected";
 
-        // Test Tag
-        await OneSignal.User.addTags({
-            test_batch:"true"
-        });
+        setTimeout(async ()=>{
 
-        // Batch Tags
-        const tagObject = {};
+            const subscriptionId =
+            OneSignal.User.PushSubscription.id;
 
-        batches.forEach(batch=>{
-            tagObject[batch] = "true";
-        });
+            console.log(subscriptionId);
 
-        if(Object.keys(tagObject).length > 0){
-            await OneSignal.User.addTags(tagObject);
-        }
+            if(subscriptionId && userDocId){
 
-        document.getElementById("status").innerHTML =
-        "✅ Tags Synced Successfully<br>" +
-        "Tags Added: " +
-        JSON.stringify(tagObject);
+                await db.collection("Accounts")
+                .doc(userDocId)
+                .update({
+                    OneSignalId: subscriptionId
+                });
 
-    }catch(error){
+                document.getElementById("onesignalStatus")
+                .innerHTML =
+                "✅ OneSignal ID Saved";
 
-        console.error(error);
+            }
 
-        document.getElementById("status").innerHTML =
-        "❌ Error<br>" +
-        error.message;
+        },5000);
+
+    }catch(err){
+
+        console.error(err);
+
+        document.getElementById("onesignalStatus")
+        .innerHTML =
+        "❌ " + err.message;
 
     }
 
@@ -140,7 +130,6 @@ function logout(){
     localStorage.clear();
     location.href="1.html";
 }
-
 </script>
 
 </body>
