@@ -3,212 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolling...</title>
+    <title>Enrollment Success</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #ffffff; }
         
-        /* Animation Container */
-        .stage { position: relative; width: 280px; height: 320px; margin: 0 auto; }
+        .container-box { perspective: 1000px; }
 
-        /* Backpack SVG Layers */
-        .bag-back { fill: #3B82F6; }
-        .bag-front { fill: #60A5FA; }
-        .bag-pocket { fill: #2DD4BF; }
+        /* Animation States */
+        #bag-container { transition: all 0.8s ease; }
+        
+        /* 1. Zipper Animation */
+        .zip-left, .zip-right { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top; }
+        .is-open .zip-left { transform: rotate(-25deg) translateX(-10px); }
+        .is-open .zip-right { transform: rotate(25deg) translateX(10px); }
 
-        /* Certificate Animation */
-        #certificate {
-            position: absolute;
-            top: 40px;
-            left: 60px;
+        /* 2. Certificate Slide */
+        #cert-card {
+            transform: translateY(0) scale(1);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0.5, 1);
             z-index: 10;
-            transition: all 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
-
-        .enrolled #certificate {
-            transform: translateY(120px) scale(0.6);
+        .is-inserted #cert-card {
+            transform: translateY(160px) scale(0.5);
             opacity: 0;
         }
 
-        /* Success Checkmark */
-        #checkmark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            z-index: 30;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* 3. Success Check */
+        #big-tick {
+            transform: scale(0);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        .show-tick #big-tick { transform: scale(1.2); }
 
-        .enrolled #checkmark { transform: translate(-50%, -50%) scale(1.2); }
+        /* Floating Animation */
+        .float-anim { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
 
-        /* Loading Spinner */
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
+        .loader-ring {
+            width: 50px; height: 50px; border: 5px solid #f3f3f3;
+            border-top: 5px solid #2563eb; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Floating effect for bag */
-        .floating { animation: floating 3s ease-in-out infinite; }
-        @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
     </style>
 </head>
-<body class="bg-white h-screen w-full flex flex-col items-center justify-center p-6 text-center">
+<body class="h-screen w-full flex items-center justify-center p-6">
 
-    <div id="main-container" class="max-w-md w-full">
+    <div class="max-w-md w-full text-center">
         
-        <!-- Illustration Stage -->
-        <div id="stage" class="stage mb-8">
-            <!-- The Certificate (Vector) -->
-            <div id="certificate">
-                <svg width="150" height="110" viewBox="0 0 150 110" fill="none">
-                    <rect width="150" height="110" rx="8" fill="white" stroke="#E2E8F0" stroke-width="4"/>
-                    <rect x="20" y="25" width="110" height="8" rx="4" fill="#CBD5E1"/>
-                    <rect x="20" y="45" width="80" height="8" rx="4" fill="#CBD5E1"/>
-                    <rect x="20" y="65" width="100" height="8" rx="4" fill="#CBD5E1"/>
-                    <circle cx="120" cy="80" r="15" fill="#FBBF24"/>
+        <!-- THE ANIMATION STAGE -->
+        <div id="stage" class="relative w-full h-80 flex items-center justify-center mb-12 container-box">
+            
+            <!-- Certificate SVG -->
+            <div id="cert-card" class="absolute top-0">
+                <svg width="140" height="100" viewBox="0 0 140 100">
+                    <rect width="140" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="4"/>
+                    <path d="M30 30h80M30 50h50M30 70h70" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="110" cy="70" r="12" fill="#fbbf24"/>
                 </svg>
             </div>
 
-            <!-- The Backpack (Vector) -->
-            <div class="absolute inset-0 z-20 floating">
-                <svg viewBox="0 0 200 240" width="200" height="240" class="mx-auto mt-20">
-                    <!-- Main Body Back -->
-                    <path d="M40 60C40 26.8629 66.8629 0 100 0C133.137 0 160 26.8629 160 60V200H40V60Z" class="bag-back"/>
-                    <!-- Main Body Front -->
-                    <path d="M40 100C40 77.9086 57.9086 60 80 60H120C142.091 60 160 77.9086 160 100V210C160 226.569 146.569 240 130 240H70C53.4315 240 40 226.569 40 210V100Z" class="bag-front"/>
-                    <!-- Pocket -->
-                    <path d="M55 150C55 138.954 63.9543 130 75 130H125C136.046 130 145 138.954 145 150V200C145 211.046 136.046 220 125 220H75C63.9543 220 55 211.046 55 200V150Z" class="bag-pocket"/>
-                    <rect x="85" y="145" width="30" height="10" rx="5" fill="white" fill-opacity="0.5"/>
-                </svg>
-            </div>
+            <!-- Backpack SVG -->
+            <div id="bag-container" class="relative z-20 float-anim">
+                <svg width="220" height="260" viewBox="0 0 200 240" fill="none">
+                    <!-- Back Main -->
+                    <path d="M30 80C30 40 60 10 100 10C140 10 170 40 170 80V210C170 226 156 240 140 240H60C44 240 30 226 30 210V80Z" fill="#2563eb"/>
+                    
+                    <!-- Inner Pocket Gap (Where cert goes) -->
+                    <rect x="50" y="80" width="100" height="40" fill="#1e3a8a" rx="4"/>
 
-            <!-- Checkmark (Success) -->
-            <div id="checkmark">
-                <div class="bg-green-500 rounded-full p-4 shadow-xl">
-                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path>
+                    <!-- Zipper Left -->
+                    <path d="M100 80L60 180" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" class="zip-left"/>
+                    <!-- Zipper Right -->
+                    <path d="M100 80L140 180" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" class="zip-right"/>
+
+                    <!-- Front Flap -->
+                    <path d="M40 110C40 90 55 75 75 75H125C145 75 160 90 160 110V215C160 228 149 239 135 239H65C51 239 40 228 40 215V110Z" fill="#3b82f6"/>
+                    
+                    <!-- Bottom Pocket -->
+                    <rect x="60" y="160" width="80" height="50" rx="12" fill="#06b6d4"/>
+                    <rect x="90" y="170" width="20" height="6" rx="3" fill="white" fill-opacity="0.5"/>
+                </svg>
+
+                <!-- Checkmark Overlay -->
+                <div id="big-tick" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full p-4 shadow-2xl border-4 border-white">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
+                        <path d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Text Content -->
-        <div id="loading-ui">
-            <div class="loader mx-auto mb-4"></div>
-            <p class="text-gray-500 font-medium">Validating your enrollment...</p>
+        <!-- TEXT DATA -->
+        <div id="loading-area">
+            <div class="loader-ring mx-auto mb-4"></div>
+            <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Securing Enrollment</p>
         </div>
 
-        <div id="success-ui" class="hidden opacity-0 transition-opacity duration-1000">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Hey <span id="student-name" class="text-blue-600">User</span>!</h1>
-            <p class="text-gray-600 text-lg">
-                You have successfully enrolled in <br>
-                <span id="course-name" class="font-bold text-gray-900">...</span>
-            </p>
-            <p class="text-sm text-gray-400 mt-6">Provided by <span id="inst-name">Your Institute</span></p>
+        <div id="content-area" class="hidden opacity-0 transform translate-y-10 transition-all duration-1000">
+            <h2 class="text-gray-500 font-semibold text-lg mb-1">Welcome aboard,</h2>
+            <h1 id="student-name" class="text-4xl font-extrabold text-gray-900 mb-6 italic tracking-tight">...</h1>
             
-            <button onclick="window.close()" class="mt-8 bg-gray-100 text-gray-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition">
-                Go to Dashboard
-            </button>
-        </div>
-
-        <!-- Error UI -->
-        <div id="error-ui" class="hidden">
-            <div class="text-red-500 mb-4">
-                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="bg-blue-50 rounded-3xl p-6 border border-blue-100 mb-6">
+                <p class="text-blue-500 font-bold text-sm uppercase mb-1">Enrolled In</p>
+                <h3 id="batch-name" class="text-xl font-extrabold text-blue-900">...</h3>
             </div>
-            <h2 class="text-xl font-bold text-gray-800" id="error-msg">Process Failed</h2>
-            <button onclick="location.reload()" class="mt-4 text-blue-600 font-semibold underline">Try Again</button>
+
+            <p class="text-gray-400 font-medium italic">
+                Verified by <span id="inst-name" class="text-gray-600 font-bold">...</span>
+            </p>
         </div>
 
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { 
-            getFirestore, doc, getDoc, updateDoc, arrayUnion, increment 
-        } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function startProcess() {
-            const params = new URLSearchParams(window.location.search);
-            const studentId = params.get('student');
-            const couponCode = params.get('cc');
-            const batchId = params.get('batches');
+        async function runBeastEnrollment() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sid = urlParams.get('student');
+            const cc = urlParams.get('cc');
+            const bid = urlParams.get('batches');
 
-            if (!studentId || !couponCode || !batchId) return showError("Invalid URL Parameters");
+            if (!sid || !cc || !bid) return;
 
             try {
-                // 1. Verify Coupon
-                const couponRef = doc(db, "coupons", couponCode);
-                const couponSnap = await getDoc(couponRef);
+                // 1. Fetch Data
+                const [studSnap, batchSnap, instSnap] = await Promise.all([
+                    getDoc(doc(db, "Accounts", sid)),
+                    getDoc(doc(doc(db, "Batches", bid))),
+                    getDoc(doc(db, "Institutes", "INSPIREJWR3247")) // Default based on your image
+                ]);
 
-                if (!couponSnap.exists()) return showError("Coupon not found!");
-                const couponData = couponSnap.data();
+                if (!studSnap.exists()) return alert("Account error");
 
-                // 2. Fetch Student Name and Batch Name simultaneously
-                const studentRef = doc(db, "Accounts", studentId);
-                const batchRef = doc(db, "Batches", batchId);
-                
-                const [studSnap, batchSnap] = await Promise.all([getDoc(studentRef), getDoc(batchRef)]);
-
-                if (!studSnap.exists()) return showError("Student account not found!");
                 const studentData = studSnap.data();
-                const batchData = batchSnap.exists() ? batchSnap.data() : { name: batchId };
+                const batchData = batchSnap.exists() ? batchSnap.data() : { name: bid };
+                const instData = instSnap.exists() ? instSnap.data() : { "Full Name": "Xpert Institute" };
 
-                // 3. Perform the Database Update
-                await updateDoc(studentRef, {
-                    "Batches": arrayUnion(batchId)
-                });
-                await updateDoc(couponRef, {
-                    usedCount: increment(1)
-                });
+                // 2. Database Action
+                await updateDoc(doc(db, "Accounts", sid), { "Batches": arrayUnion(bid) });
+                await updateDoc(doc(db, "coupons", cc), { usedCount: increment(1) });
 
-                // 4. Trigger Animation & UI
-                showSuccess(studentData['Full Name'], batchId);
+                // 3. UI Updates
+                document.getElementById('student-name').innerText = studentData["Full Name"];
+                document.getElementById('batch-name').innerText = batchData["name"] || bid;
+                document.getElementById('inst-name').innerText = instData["Full Name"];
+
+                triggerAnimation();
 
             } catch (e) {
                 console.error(e);
-                showError(e.message);
             }
         }
 
-        function showSuccess(name, course) {
-            document.getElementById('loading-ui').classList.add('hidden');
-            document.getElementById('student-name').innerText = name;
-            document.getElementById('course-name').innerText = course;
+        function triggerAnimation() {
+            const stage = document.getElementById('stage');
             
-            // Start Animation
-            document.getElementById('stage').classList.add('enrolled');
-            
-            // Show Text with fade
+            // Step 1: Open Zipper
             setTimeout(() => {
-                const successUI = document.getElementById('success-ui');
-                successUI.classList.remove('hidden');
-                setTimeout(() => successUI.classList.add('opacity-100'), 50);
-            }, 800);
+                stage.classList.add('is-open');
+                
+                // Step 2: Slide Certificate
+                setTimeout(() => {
+                    stage.classList.add('is-inserted');
+                    
+                    // Step 3: Close Zipper
+                    setTimeout(() => {
+                        stage.classList.remove('is-open');
+                        
+                        // Step 4: Show Tick and Data
+                        setTimeout(() => {
+                            stage.classList.add('show-tick');
+                            document.getElementById('loading-area').classList.add('hidden');
+                            const content = document.getElementById('content-area');
+                            content.classList.remove('hidden');
+                            setTimeout(() => {
+                                content.classList.add('opacity-100');
+                                content.classList.remove('translate-y-10');
+                            }, 50);
+                        }, 600);
+                    }, 1000);
+                }, 800);
+            }, 500);
         }
 
-        function showError(msg) {
-            document.getElementById('loading-ui').classList.add('hidden');
-            const errUI = document.getElementById('error-ui');
-            errUI.classList.remove('hidden');
-            document.getElementById('error-msg').innerText = msg;
-        }
-
-        window.onload = startProcess;
+        window.onload = runBeastEnrollment;
     </script>
 </body>
 </html>
