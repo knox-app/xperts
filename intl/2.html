@@ -2,58 +2,221 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile</title>
-    <style>
-        #profile-container { max-width: 500px; margin: 20px auto; border: 1px solid #ccc; padding: 20px; }
-        .field { margin-bottom: 10px; }
-        label { font-weight: bold; display: block; }
-    </style>
-</head>
-<body id="dynamicBody">
-    <div id="profile-container">
-        <h1>Profile</h1>
-        <div id="userData">Loading...</div>
-        <hr>
-        <button onclick="window.location.href='3.html'">View Picture Only</button>
-        <button onclick="window.location.href='4.html'" style="color:red">Logout</button>
-    </div>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Details</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+    <style>
+        :root { --primary-blue: #0062e1; --bg-gray: #f8f9fb; --text-gray: #666; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-gray); color: #333; transition: all 0.3s; }
+        
+        /* Header */
+        .header { display: flex; align-items: center; padding: 15px; background: white; }
+        .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; text-decoration: none; color: black; }
+        .header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+
+        /* Profile Summary */
+        .profile-summary { padding: 30px 20px; display: flex; align-items: center; gap: 20px; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #eee; border: 1px solid #ddd; object-fit: cover; }
+        .profile-info h1 { margin: 0; font-size: 20px; }
+        .profile-info p { margin: 5px 0; color: var(--text-gray); }
+        .badge { display: inline-block; background: #222; color: white; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+
+        /* Sections */
+        .section-container { padding: 0 15px 30px 15px; }
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-header h3 { margin: 0; font-size: 16px; color: var(--text-gray); }
+        .edit-link { color: var(--primary-blue); font-size: 14px; font-weight: 600; text-decoration: none; }
+        
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .label { color: var(--text-gray); }
+        .value { font-weight: 500; text-align: right; }
+
+        /* Batch Specific UI */
+        .batch-card { border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 15px; }
+        .batch-card:last-child { border-bottom: none; margin-bottom: 0; }
+        .batch-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; display: block; line-height: 1.4; }
+        .special-tag { float: right; background: #444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+
+        /* Bottom Sheet (Modal) */
+        .modal-overlay { position: fixed; bottom: -100%; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); transition: bottom 0.3s; display: flex; align-items: flex-end; z-index: 1000; }
+        .modal-content { background: white; width: 100%; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 30px 20px; box-sizing: border-box; }
+        .modal-content h2 { margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { cursor: pointer; border: 1px solid #ccc; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+        .input-box { width: 100%; padding: 12px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+        .gender-options { display: flex; gap: 10px; }
+        .gender-btn { flex: 1; padding: 12px; border: 1.5px solid #ddd; border-radius: 12px; background: white; cursor: pointer; }
+        .gender-btn.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); }
+        .submit-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 15px; border-radius: 30px; font-size: 16px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="1.html" class="back-btn">←</a>
+        <h2>Personal Details</h2>
+    </div>
+
+    <div class="profile-summary">
+        <img id="uAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar">
+        <div class="profile-info">
+            <h1 id="uName">Loading...</h1>
+            <p id="uClass">Class -</p>
+            <span class="badge">Enrolled Student</span>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <!-- Contact Details -->
+        <div class="card">
+            <div class="card-header"><h3>Contact Details</h3> <a href="#" class="edit-link">Edit</a></div>
+            <div class="data-row"><span class="label">Phone Number</span><span class="value" id="uPhone">-</span></div>
+            <div class="data-row"><span class="label">Email</span><span class="value" id="uEmail">-</span></div>
+        </div>
+
+        <!-- Student Details -->
+        <div class="card">
+            <div class="card-header"><h3>Student Details</h3> <a href="#" class="edit-link">Edit</a></div>
+            <div class="data-row"><span class="label">Gender</span><span class="value" id="uGender">-</span></div>
+            <div class="data-row"><span class="label">Blood Group</span><span class="value" id="uBlood">-</span></div>
+            <div class="data-row"><span class="label">Date of Birth</span><span class="value" id="uDOB">-</span></div>
+        </div>
+
+        <!-- Parent Details -->
+        <div class="card">
+            <div class="card-header"><h3>Parent Details</h3> <a href="#" class="edit-link">Edit</a></div>
+            <div class="data-row"><span class="label">Name</span><span class="value" id="uGuardian">-</span></div>
+            <div class="data-row"><span class="label">Contact number</span><span class="value">-</span></div>
+        </div>
+
+        <!-- Batch details -->
+        <div class="card">
+            <div class="card-header"><h3>Batch details</h3></div>
+            <div id="batchList">
+                <p style="font-size: 12px; color: #999;">Loading batches...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Your Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <h2>Complete Your Profile <span class="close-modal" onclick="closeModal()">×</span></h2>
+            <div class="form-group">
+                <label>DOB</label>
+                <input type="date" class="input-box" id="inpDOB">
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <div class="gender-options">
+                    <button class="gender-btn" onclick="setGender('Male', this)">Male</button>
+                    <button class="gender-btn" onclick="setGender('Female', this)">Female</button>
+                    <button class="gender-btn" onclick="setGender('Other', this)">Other</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Blood group</label>
+                <select class="input-box" id="inpBlood">
+                    <option value="">Select one</option>
+                    <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
+                </select>
+            </div>
+            <button class="submit-btn" onclick="updateProfile()">Submit</button>
+        </div>
+    </div>
 
     <script>
-        // 1. Handle URL Parameters: 2.html?all=font=<15px>&colour=<#000>
-        const params = new URLSearchParams(window.location.search);
-        const fontParam = params.get('font'); // Extract <15px>
-        const colorParam = params.get('colour'); // Extract <#000>
-
-        if(fontParam) {
-            document.body.style.fontSize = fontParam.replace(/[<>]/g, '');
-        }
-        if(colorParam) {
-            document.body.style.color = colorParam.replace(/[<>]/g, '');
-        }
-
-        // 2. Fetch Data
         const docId = localStorage.getItem("userDocId");
         if(!docId) window.location.href = "1.html";
 
+        // Handle URL Parameters
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('font')) document.body.style.fontSize = params.get('font').replace(/[<>]/g, '');
+        if(params.get('colour')) document.body.style.color = params.get('colour').replace(/[<>]/g, '');
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        let selectedGender = "";
 
-        db.collection("Accounts").doc(docId).get().then(doc => {
+        // Load User Data
+        async function loadProfile() {
+            const doc = await db.collection("Accounts").doc(docId).get();
             if (doc.exists) {
                 const data = doc.data();
-                document.getElementById('userData').innerHTML = `
-                    <div class="field"><label>Name:</label> ${data['Full Name']}</div>
-                    <div class="field"><label>Email:</label> ${data['Email']}</div>
-                    <div class="field"><label>Type:</label> ${data['Type']}</div>
-                    <div class="field"><label>Phone:</label> ${data['Phone Number']}</div>
-                    <img src="${data['Profile Picture']}" width="100">
-                `;
+                document.getElementById('uName').innerText = data['Full Name'] || 'User';
+                document.getElementById('uClass').innerText = (data['Class'] || '12') + " Plus | NEET";
+                document.getElementById('uAvatar').src = data['Profile Picture'] || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                document.getElementById('uPhone').innerText = data['Phone Number'];
+                document.getElementById('uEmail').innerText = data['Email'];
+                document.getElementById('uGender').innerText = data['Gender'] || '-';
+                document.getElementById('uDOB').innerText = data['Date of Birth'] || '-';
+                document.getElementById('uGuardian').innerText = data['Guardians'] || '-';
+
+                // Check if profile is incomplete
+                if(!data['Gender'] || !data['Date of Birth']) {
+                    document.getElementById('profileModal').style.bottom = "0";
+                }
+
+                // Fetch Batches
+                loadBatches(data['Batches'] || []);
             }
-        });
+        }
+
+        async function loadBatches(batchIds) {
+            const container = document.getElementById('batchList');
+            if(batchIds.length === 0) {
+                container.innerHTML = "No active batches found.";
+                return;
+            }
+            container.innerHTML = "";
+            
+            for (const bId of batchIds) {
+                const bDoc = await db.collection("Batches").doc(bId).get();
+                if(bDoc.exists) {
+                    const b = bDoc.data();
+                    container.innerHTML += `
+                        <div class="batch-card">
+                            <span class="special-tag">Special</span>
+                            <span class="batch-title">${b['Batch name'] || 'Course Batch'}</span>
+                            <div class="data-row"><span class="label">Batch timing</span><span class="value">${b['Timing'] || 'Morning'}</span></div>
+                            <div class="data-row"><span class="label">Batch name</span><span class="value">${bId}</span></div>
+                            <div class="data-row"><span class="label">Valid Till</span><span class="value">31-07-2026</span></div>
+                            <div class="data-row"><span class="label">Form Id</span><span class="value">2461325010</span></div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function setGender(g, btn) {
+            selectedGender = g;
+            document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('profileModal').style.bottom = "-100%"; }
+
+        async function updateProfile() {
+            const dob = document.getElementById('inpDOB').value;
+            const blood = document.getElementById('inpBlood').value;
+            if(!dob || !selectedGender) return alert("Please fill all fields");
+
+            await db.collection("Accounts").doc(docId).update({
+                "Date of Birth": dob,
+                "Gender": selectedGender,
+                "Blood Group": blood
+            });
+            closeModal();
+            loadProfile();
+        }
+
+        loadProfile();
     </script>
 </body>
 </html>
