@@ -4,131 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Details</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
     <style>
-        :root { --primary-blue: #0062e1; --bg-gray: #f2f4f7; --text-gray: #7d7d7d; }
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: white; color: #1a1a1a; }
+        :root { --p-blue: #0062e1; --bg: #f5f7f9; --txt-g: #7d7d7d; --card-sh: 0 4px 12px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: white; color: #1a1a1a; -webkit-tap-highlight-color: transparent; }
         
-        .header { display: flex; align-items: center; padding: 20px 15px; position: sticky; top: 0; background: white; z-index: 10; }
-        .back-btn { font-size: 24px; margin-right: 15px; text-decoration: none; color: #333; }
+        /* Layout */
+        .header { display: flex; align-items: center; padding: 18px 15px; background: white; position: sticky; top: 0; z-index: 5; }
+        .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; border:none; background:none; }
         .header h2 { margin: 0; font-size: 18px; font-weight: 600; }
 
-        .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
-        .avatar-circle { width: 90px; height: 90px; border-radius: 50%; border: 1px solid #ddd; overflow: hidden; background: #f9f9f9; }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-text h1 { margin: 0; font-size: 22px; font-weight: 700; }
-        .profile-text p { margin: 5px 0; color: var(--text-gray); font-size: 14px; }
-        .enrolled-badge { display: none; background: #2b2b2b; color: white; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-top: 5px; }
+        .profile-area { padding: 20px; display: flex; align-items: center; gap: 18px; }
+        .avatar { width: 85px; height: 85px; border-radius: 50%; border: 1px solid #eee; object-fit: cover; background: #f9f9f9; }
+        .p-info h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .p-info p { margin: 4px 0; color: var(--txt-g); font-size: 15px; }
+        .badge { display: none; background: #2b2b2b; color: white; font-size: 10px; padding: 5px 10px; border-radius: 4px; font-weight: 800; margin-top: 6px; }
 
-        .content { background: var(--bg-gray); padding: 15px; border-radius: 25px 25px 0 0; min-height: 80vh; }
-        .card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .card-header h3 { margin: 0; font-size: 15px; color: var(--text-gray); font-weight: 500; }
-        .edit-btn { color: var(--primary-blue); font-size: 14px; font-weight: 600; cursor: pointer; }
+        .main-content { background: var(--bg); padding: 15px; border-radius: 28px 28px 0 0; min-height: 80vh; }
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: var(--card-sh); }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .card-head h3 { margin: 0; font-size: 15px; color: var(--txt-g); font-weight: 500; }
+        .edit-link { color: var(--p-blue); font-size: 14px; font-weight: 600; cursor: pointer; }
 
-        .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-        .label { color: var(--text-gray); }
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; align-items: center; }
+        .row:last-child { margin-bottom: 0; }
+        .lbl { color: var(--txt-g); }
         .val { font-weight: 500; text-align: right; }
 
-        /* Batch Styles */
-        .batch-title { font-weight: 700; font-size: 14px; display: block; margin-bottom: 10px; line-height: 1.4; padding-right: 70px; position: relative; }
-        .status-tag { position: absolute; right: 0; top: 0; font-size: 11px; font-weight: bold; }
-        .status-active { color: #28a745; }
-        .status-ended { color: #dc3545; }
-        .form-id-row { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
-        .bell-icon { width: 14px; height: 14px; }
+        /* Batch Specific */
+        .batch-name-title { font-weight: bold; font-size: 14px; margin-bottom: 12px; display: block; line-height: 1.4; padding-right: 70px; position: relative; }
+        .status-tag { position: absolute; right: 0; top: 0; font-size: 12px; font-weight: 600; }
+        .status-tag.active { color: #28a745; }
+        .status-tag.ended { color: #dc3545; }
+        .key-icon { width: 16px; vertical-align: middle; margin-right: 4px; }
 
         /* Modals */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: flex-end; z-index: 100; }
-        .sheet { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: 0.3s; }
-        .sheet.show { transform: translateY(0); }
-        .close-btn { position: absolute; right: 20px; top: 20px; font-size: 20px; color: #999; cursor: pointer; border: 1px solid #eee; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
+        .sheet { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease; }
+        .sheet.open { transform: translateY(0); }
+        .close-btn { position: absolute; right: 20px; top: 20px; width: 30px; height: 30px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* Alert Support Modal Specific */
-        .support-content { text-align: center; }
-        .bell-img { width: 100px; margin-bottom: 20px; }
-        .support-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; line-height: 1.2; }
-        .support-text { color: var(--text-gray); margin-bottom: 25px; }
-        .call-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        /* Support Modal UI */
+        .support-ui { text-align: center; }
+        .bell-img { width: 120px; margin-bottom: 20px; }
+        .support-ui h2 { font-size: 20px; margin-bottom: 10px; padding: 0 20px; }
+        .support-ui p { color: var(--txt-g); margin-bottom: 25px; }
 
-        /* Student Edit Form */
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 14px; }
-        .inp { width: 100%; padding: 15px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; }
-        .gender-grid { display: flex; gap: 10px; }
-        .g-btn { flex: 1; padding: 12px; border: 1.5px solid #eee; border-radius: 12px; background: white; cursor: pointer; }
-        .g-btn.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); }
+        /* Form UI */
+        .f-group { margin-bottom: 20px; }
+        .f-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        .inp { width: 100%; padding: 15px; border: 1.5px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .btn-row { display: flex; gap: 10px; }
+        .opt-btn { flex: 1; padding: 14px; border: 1.5px solid #eee; border-radius: 15px; background: white; font-weight: 600; cursor: pointer; }
+        .opt-btn.active { border-color: var(--p-blue); background: #f0f7ff; color: var(--p-blue); }
+        .blue-btn { width: 100%; background: var(--p-blue); color: white; border: none; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header"><a href="1.html" class="back-btn">←</a><h2>Personal Details</h2></div>
+    <div class="header">
+        <button class="back-btn" onclick="window.history.back()">←</button>
+        <h2>Personal Details</h2>
+    </div>
 
-    <div class="profile-header">
-        <div class="avatar-circle"><img id="uPic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"></div>
-        <div class="profile-text">
-            <h1 id="uName">Loading...</h1>
-            <p id="uClass">-</p>
-            <span class="enrolled-badge" id="enrolledBadge">ENROLLED STUDENT</span>
+    <div class="profile-area">
+        <img id="uPic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar">
+        <div class="p-info">
+            <h1 id="uName">...</h1>
+            <p id="uClass">Class - | -</p>
+            <span class="badge" id="enrollBadge">ENROLLED STUDENT</span>
         </div>
     </div>
 
-    <div class="content">
+    <div class="main-content">
+        <!-- Contact -->
         <div class="card">
-            <div class="card-header"><h3>Contact Details</h3><span class="edit-btn" onclick="openSupportModal()">Edit</span></div>
-            <div class="row"><span class="label">Phone Number</span><span class="val" id="uPhone">-</span></div>
-            <div class="row"><span class="label">Email</span><span class="val" id="uEmail">-</span></div>
+            <div class="card-head"><h3>Contact Details</h3> <span class="edit-link" onclick="openSupport('contact')">Edit</span></div>
+            <div class="row"><span class="lbl">Phone Number</span><span class="val" id="uPhone">-</span></div>
+            <div class="row"><span class="lbl">Email</span><span class="val" id="uEmail">-</span></div>
         </div>
 
+        <!-- Student Details -->
         <div class="card">
-            <div class="card-header"><h3>Student Details</h3><span class="edit-btn" onclick="openEditModal()">Edit</span></div>
-            <div class="row"><span class="label">Gender</span><span class="val" id="uGender">-</span></div>
-            <div class="row"><span class="label">Blood Group</span><span class="val" id="uBlood">-</span></div>
-            <div class="row"><span class="label">Date of Birth</span><span class="val" id="uDOB">-</span></div>
+            <div class="card-head"><h3>Student Details</h3> <span class="edit-link" onclick="openEdit()">Edit</span></div>
+            <div class="row"><span class="lbl">Gender</span><span class="val" id="uGender">-</span></div>
+            <div class="row"><span class="lbl">Blood Group</span><span class="val" id="uBlood">-</span></div>
+            <div class="row"><span class="lbl">Date of Birth</span><span class="val" id="uDOB">-</span></div>
         </div>
 
+        <!-- Parent Details -->
         <div class="card">
-            <div class="card-header"><h3>Parent Details</h3><span class="edit-btn" onclick="openSupportModal()">Edit</span></div>
-            <div class="row"><span class="label">Name</span><span class="val" id="uGuard">-</span></div>
-            <div class="row"><span class="label">Contact number</span><span class="val" id="uGuardPhone">-</span></div>
+            <div class="card-head"><h3>Parent Details</h3> <span class="edit-link" onclick="openSupport('parent')">Edit</span></div>
+            <div class="row"><span class="lbl">Name</span><span class="val" id="uGuard">-</span></div>
+            <div class="row"><span class="lbl">Contact number</span><span class="val" id="uGuardPhone">-</span></div>
         </div>
 
         <h3 style="margin: 10px 5px; font-size: 15px; color: #555;">Batch details</h3>
-        <div id="batchBox"></div>
+        <div id="batchList"></div>
     </div>
 
     <!-- Student Edit Modal -->
     <div class="overlay" id="editOverlay">
         <div class="sheet" id="editSheet">
-            <span class="close-btn" onclick="closeModals()">✕</span>
+            <div class="close-btn" onclick="closeModals()">✕</div>
             <h2 style="margin-top:0">Complete Your Profile</h2>
-            <div class="form-group"><label>DOB</label><input type="date" class="inp" id="inpDOB"></div>
-            <div class="form-group"><label>Gender</label>
-                <div class="gender-grid">
-                    <button class="g-btn" onclick="setG('Male', this)">Male</button>
-                    <button class="g-btn" onclick="setG('Female', this)">Female</button>
-                    <button class="g-btn" onclick="setG('Other', this)">Other</button>
+            <div class="f-group">
+                <label>DOB</label>
+                <input type="date" class="inp" id="inpDOB">
+            </div>
+            <div class="f-group">
+                <label>Gender</label>
+                <div class="btn-row">
+                    <button class="opt-btn" id="gMale" onclick="setGender('Male')">Male</button>
+                    <button class="opt-btn" id="gFemale" onclick="setGender('Female')">Female</button>
+                    <button class="opt-btn" id="gOther" onclick="setGender('Other')">Other</button>
                 </div>
             </div>
-            <div class="form-group"><label>Blood group</label>
+            <div class="f-group">
+                <label>Blood group</label>
                 <select class="inp" id="inpBlood">
-                    <option value="">Select one</option><option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
+                    <option value="">Select one</option>
+                    <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
+                    <option>A-</option><option>O-</option><option>B-</option><option>AB-</option>
                 </select>
             </div>
-            <button class="call-btn" onclick="saveData()">Submit</button>
+            <button class="blue-btn" onclick="saveData()">Submit</button>
         </div>
     </div>
 
-    <!-- Customer Support Modal -->
+    <!-- Support Modal -->
     <div class="overlay" id="supportOverlay">
-        <div class="sheet support-content" id="supportSheet">
-            <span class="close-btn" onclick="closeModals()">✕</span>
-            <img src="https://i.ibb.co/3WfT8Nq/bell.png" class="bell-img" alt="Bell">
-            <div class="support-title">Want to change your parents name & phone number</div>
-            <p class="support-text">Please call our customer support</p>
-            <button class="call-btn" onclick="window.location.href='tel:8005811475'">Call us</button>
+        <div class="sheet" id="supportSheet">
+            <div class="close-btn" onclick="closeModals()">✕</div>
+            <div class="support-ui">
+                <!-- Using a bell emoji/div as placeholder if URL is just a screenshot of text, but using provided URL -->
+                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="bell-img">
+                <h2 id="supportTitle">Want to change your parents name & phone number</h2>
+                <p>Please call our customer support</p>
+                <button class="blue-btn" onclick="window.location.href='tel:8914756767'">Call us</button>
+            </div>
         </div>
     </div>
 
@@ -139,14 +156,20 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let selGender = "";
+        let accKey = "";
 
-        async function load() {
+        async function init() {
             const doc = await db.collection("Accounts").doc(docId).get();
             if(!doc.exists) return;
             const data = doc.data();
+            accKey = data['Acoount Keys'] || '-';
 
+            // Profile Top
             document.getElementById('uName').innerText = data['Full Name'];
-            document.getElementById('uClass').innerText = (data['Class'] || '12+') + " Plus | NEET";
+            document.getElementById('uClass').innerText = (data['Class'] || '12') + " Plus | NEET";
+            if(data['Profile Picture']) document.getElementById('uPic').src = data['Profile Picture'];
+
+            // Data Rows
             document.getElementById('uPhone').innerText = data['Phone Number'];
             document.getElementById('uEmail').innerText = data['Email'];
             document.getElementById('uGender').innerText = data['Gender'] || '-';
@@ -154,74 +177,86 @@
             document.getElementById('uDOB').innerText = data['Date of Birth'] || '-';
             document.getElementById('uGuard').innerText = data['Guardians'] || '-';
             document.getElementById('uGuardPhone').innerText = data['Guardian Phone Number'] || '-';
-            if(data['Profile Picture']) document.getElementById('uPic').src = data['Profile Picture'];
 
-            const batchIds = data['Batches'] || [];
-            if(batchIds.length > 0) {
-                document.getElementById('enrolledBadge').style.display = 'inline-block';
-                renderBatches(batchIds, data['Acoount Keys']);
+            // Batch Processing
+            const batches = data['Batches'] || [];
+            if(batches.length > 0) {
+                document.getElementById('enrollBadge').style.display = 'inline-block';
+                loadBatches(batches);
+            } else {
+                document.getElementById('batchList').innerHTML = '<p style="padding:20px; color:#999; text-align:center">No batches enrolled.</p>';
             }
 
-            if(!data['Gender'] || !data['Date of Birth']) openEditModal();
+            // Auto-trigger edit if profile missing
+            if(!data['Gender'] || !data['Date of Birth']) openEdit();
         }
 
-        async function renderBatches(ids, accKey) {
-            const box = document.getElementById('batchBox');
-            box.innerHTML = "";
+        async function loadBatches(ids) {
+            const container = document.getElementById('batchList');
+            container.innerHTML = "";
             for(const bid of ids) {
                 const bdoc = await db.collection("Batches").doc(bid).get();
-                if(!bdoc.exists) continue;
-                const b = bdoc.data();
-                const isActive = b['Status'] === 'Active';
-                
-                box.innerHTML += `
-                    <div class="card">
-                        <span class="batch-title">${b['Batch Name']}
-                            <span class="status-tag ${isActive ? 'status-active' : 'status-ended'}">
-                                • ${b['Status'] || 'Unknown'}
-                            </span>
-                        </span>
-                        <div class="row"><span class="label">Batch name</span><span class="val">${bid}</span></div>
-                        <div class="row"><span class="label">Valid Till</span><span class="val">31-07-2026</span></div>
-                        <div class="row"><span class="label">Form Id</span>
-                            <div class="form-id-row">
-                                <span class="val">${accKey || '-'}</span>
-                                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="bell-icon">
+                if(bdoc.exists) {
+                    const b = bdoc.data();
+                    const isActive = b['Status'] === 'Active';
+                    const statusHTML = isActive ? '<span class="status-tag active">• Active</span>' : '<span class="status-tag ended">• Ended</span>';
+                    
+                    container.innerHTML += `
+                        <div class="card">
+                            <span class="batch-name-title">${b['Batch Name']} ${statusHTML}</span>
+                            <div class="row"><span class="lbl">Batch name</span><span class="val">${bid}</span></div>
+                            <div class="row"><span class="lbl">Valid Till</span><span class="val">31-07-2026</span></div>
+                            <div class="row">
+                                <span class="lbl">Form Id</span>
+                                <span class="val">
+                                    <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="key-icon">
+                                    ${accKey}
+                                </span>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
         }
 
-        function openEditModal() { show('editOverlay', 'editSheet'); }
-        function openSupportModal() { show('supportOverlay', 'supportSheet'); }
-        
-        function show(ovId, shId) {
-            document.getElementById(ovId).style.display = 'flex';
-            setTimeout(() => document.getElementById(shId).classList.add('show'), 10);
+        function openEdit() {
+            document.getElementById('editOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('editSheet').classList.add('open'), 10);
+        }
+
+        function openSupport(type) {
+            const title = type === 'parent' ? "Want to change your parents name & phone number" : "Want to change your contact details";
+            document.getElementById('supportTitle').innerText = title;
+            document.getElementById('supportOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('supportSheet').classList.add('open'), 10);
         }
 
         function closeModals() {
-            document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+            document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
             setTimeout(() => document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'), 300);
         }
 
-        function setG(v, btn) {
-            selGender = v;
-            document.querySelectorAll('.g-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        function setGender(g) {
+            selGender = g;
+            document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('g' + g).classList.add('active');
         }
 
         async function saveData() {
             const dob = document.getElementById('inpDOB').value;
-            const blood = document.getElementById('inpBlood').value;
-            if(!dob || !selGender) return alert("Fill Gender and DOB");
-            await db.collection("Accounts").doc(docId).update({"Date of Birth": dob, "Gender": selGender, "Blood Group": blood});
-            closeModals(); load();
+            const bld = document.getElementById('inpBlood').value;
+            if(!dob || !selGender) return alert("Please select Gender and Date of Birth");
+
+            await db.collection("Accounts").doc(docId).update({
+                "Date of Birth": dob,
+                "Gender": selGender,
+                "Blood Group": bld
+            });
+            closeModals();
+            init();
         }
 
-        load();
+        init();
     </script>
 </body>
 </html>
