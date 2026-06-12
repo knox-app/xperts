@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f5f5;
+    margin:0;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
+.batch{
+    padding:10px;
+    margin:5px 0;
+    background:#eef3ff;
+    border-radius:5px;
+}
+
+button{
+    padding:12px;
+    border:none;
+    background:red;
+    color:white;
+    border-radius:5px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h2>Dashboard</h2>
+
+<p id="studentName"></p>
+
+<p id="studentClass"></p>
+
+</div>
+
+<div class="card">
+
+<h3>Joined Batches</h3>
+
+<div id="batchList"></div>
+
+</div>
+
+<div class="card">
+
+<h3>OneSignal Status</h3>
+
+<div id="status">Connecting...</div>
+
+</div>
+
+<button onclick="logout()">Logout</button>
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<script>
+
+const userData =
+JSON.parse(localStorage.getItem("userData") || "{}");
+
+const batches =
+JSON.parse(localStorage.getItem("userBatches") || "[]");
+
+if(!localStorage.getItem("userDocId")){
+    location.href="1.html";
+}
+
+document.getElementById("studentName").innerText =
+"Name : " + (userData["Full Name"] || "");
+
+document.getElementById("studentClass").innerText =
+"Class : " + (userData["Class"] || "");
+
+const batchDiv =
+document.getElementById("batchList");
+
+batches.forEach(batch=>{
+
+    batchDiv.innerHTML +=
+    `<div class="batch">${batch}</div>`;
+
+});
+
+window.OneSignalDeferred =
+window.OneSignalDeferred || [];
+
+OneSignalDeferred.push(async function(OneSignal){
+
+    await OneSignal.init({
+        appId:"YOUR_ONESIGNAL_APP_ID"
+    });
+
+    for(const batch of batches){
+
+        await OneSignal.User.addTag(
+            batch,
+            "true"
+        );
+
+        console.log(
+            "Tag Added:",
+            batch
+        );
+
+    }
+
+    document.getElementById("status").innerHTML =
+    "✅ Tags Synced Successfully";
+
+});
+
+function logout(){
+
+    localStorage.clear();
+
+    location.href="1.html";
+
+}
+
+</script>
+
+</body>
+</html>
