@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Generate Coupon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Your Provided Firebase Keys -->
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+    <div id="loginSection" class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
+        <input type="text" id="adminIdInput" placeholder="Enter Admin ID" class="w-full p-2 border rounded mb-4">
+        <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-2 rounded">Login</button>
+    </div>
+
+    <div id="adminPanel" class="hidden bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 class="text-2xl font-bold mb-4">Generate Coupon</h2>
+        
+        <label class="block mb-2">Select Batch</label>
+        <select id="batchSelect" class="w-full p-2 border rounded mb-4">
+            <option value="BATCH_01">Batch 01 - Science</option>
+            <option value="BATCH_02">Batch 02 - Maths</option>
+            <option value="BATCH_03">Batch 03 - English</option>
+        </select>
+
+        <label class="block mb-2">Validity Date</label>
+        <input type="date" id="validity" class="w-full p-2 border rounded mb-4">
+
+        <label class="block mb-2">Usage Limit (No. of users)</label>
+        <input type="number" id="usageLimit" value="1" min="1" class="w-full p-2 border rounded mb-4">
+
+        <button onclick="generateAndSaveCoupon()" class="w-full bg-green-600 text-white py-2 rounded">Generate & Save</button>
+        
+        <div id="result" class="mt-4 p-3 bg-gray-200 rounded hidden break-all font-mono text-center"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        // Initialize Firebase using the config from your external JS file
+        // Assumes your xprtfb.js file defines a variable 'firebaseConfig'
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Check Login logic
+        window.checkLogin = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlId = urlParams.get('id');
+            const inputId = document.getElementById('adminIdInput').value;
+            
+            if(urlId === "ALLENCIKTO4858" || inputId === "ALLENCIKTO4858") {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+            } else {
+                alert("Invalid Admin ID");
+            }
+        };
+
+        // Auto-check URL parameter on load
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('id') === "ALLENCIKTO4858") checkLogin();
+
+        // Coupon Code Logic
+        window.generateAndSaveCoupon = async function() {
+            const batch = document.getElementById('batchSelect').value;
+            const validity = document.getElementById('validity').value;
+            const limit = document.getElementById('usageLimit').value;
+
+            if(!validity) return alert("Select Validity Date");
+
+            // Format: <4 DIGIT>XPRT<2 ALPHA>CC<4 ALPHANUMERIC>
+            const d4 = Math.floor(1000 + Math.random() * 9000);
+            const a2 = Array.from({length: 2}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
+            const an4 = Math.random().toString(36).substring(2, 6).toUpperCase();
+            
+            const couponCode = `${d4}XPRT${a2}CC${an4}`;
+
+            try {
+                // Save to Firestore: batches > {batchName} > coupons > {code}
+                await setDoc(doc(db, "coupons", couponCode), {
+                    code: couponCode,
+                    batchId: batch,
+                    validity: validity,
+                    maxUsage: parseInt(limit),
+                    usedCount: 0,
+                    createdAt: new Date().toISOString()
+                });
+
+                const resDiv = document.getElementById('result');
+                resDiv.innerText = "Generated: " + couponCode;
+                resDiv.classList.remove('hidden');
+                alert("Coupon Saved to Firestore!");
+            } catch (e) {
+                console.error("Error saving coupon: ", e);
+            }
+        };
+    </script>
+</body>
+</html>
