@@ -32,8 +32,7 @@
         .info-label { color: var(--text-gray); }
         .info-value { font-weight: 500; text-align: right; }
 
-        /* Batch Card Styling */
-        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; margin-bottom: 12px; display: block; width: 80%; }
+        .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; margin-bottom: 12px; display: block; width: 75%; }
         .status-dot { font-size: 12px; font-weight: 700; float: right; margin-top: -30px; }
         .active-text { color: var(--green); }
         .ended-text { color: var(--red); }
@@ -45,14 +44,13 @@
         .modal-sheet.show { transform: translateY(0); }
         
         .support-ui { text-align: center; padding: 10px 0; }
-        .bell-icon { width: 120px; margin-bottom: 20px; }
-        .support-ui h2 { font-size: 20px; margin-bottom: 10px; line-height: 1.3; }
-        .support-ui p { color: var(--text-gray); margin-bottom: 25px; }
+        .support-icon { width: 100px; margin-bottom: 20px; border-radius: 10px; }
+        .support-ui h2 { font-size: 20px; margin-bottom: 10px; line-height: 1.3; font-weight: 700; }
+        .support-ui p { color: var(--text-gray); margin-bottom: 25px; font-size: 15px; }
         
         .submit-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; }
         .close-x { position: absolute; right: 20px; top: 20px; font-size: 20px; color: #999; cursor: pointer; border: 1px solid #ddd; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; }
 
-        /* Form Inputs */
         .field-group { margin-bottom: 15px; text-align: left; }
         .field-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
         .inp { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 12px; font-size: 15px; box-sizing: border-box; outline: none; }
@@ -78,9 +76,9 @@
     </div>
 
     <div class="content">
-        <!-- Contact -->
+        <!-- Contact Details -->
         <div class="card">
-            <div class="card-header"><h3>Contact Details</h3><span class="edit-btn" onclick="openSupport()">Edit</span></div>
+            <div class="card-header"><h3>Contact Details</h3><span class="edit-btn" onclick="openSupport('contact')">Edit</span></div>
             <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value" id="uPhone">-</span></div>
             <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="uEmail">-</span></div>
         </div>
@@ -93,9 +91,9 @@
             <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value" id="uDOB">-</span></div>
         </div>
 
-        <!-- Parent -->
+        <!-- Parent Details -->
         <div class="card">
-            <div class="card-header"><h3>Parent Details</h3><span class="edit-btn" onclick="openSupport()">Edit</span></div>
+            <div class="card-header"><h3>Parent Details</h3><span class="edit-btn" onclick="openSupport('parent')">Edit</span></div>
             <div class="info-row"><span class="info-label">Name</span><span class="info-value" id="uGuard">-</span></div>
             <div class="info-row"><span class="info-label">Contact number</span><span class="info-value" id="uGuardPhone">-</span></div>
         </div>
@@ -104,13 +102,13 @@
         <div id="batchContainer"></div>
     </div>
 
-    <!-- Support Modal -->
+    <!-- Support Modal (Universal) -->
     <div class="modal-overlay" id="supportModal">
         <div class="modal-sheet" id="supportSheet">
             <span class="close-x" onclick="closeModals()">✕</span>
             <div class="support-ui">
-                <img src="https://i.ibb.co/3ykC6Wf/bell.png" class="bell-icon" alt="Bell">
-                <h2>Want to change your parents name & phone number</h2>
+                <img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="support-icon">
+                <h2 id="supportTitle">Want to change your details</h2>
                 <p>Please call our customer support</p>
                 <button class="submit-btn" onclick="window.location.href='tel:8914756767'">Call us</button>
             </div>
@@ -139,6 +137,7 @@
                 <select class="inp" id="inpBlood">
                     <option value="">Select one</option>
                     <option>A+</option><option>O+</option><option>B+</option><option>AB+</option>
+                    <option>A-</option><option>O-</option><option>B-</option><option>AB-</option>
                 </select>
             </div>
             <button class="submit-btn" onclick="updateUser()">Submit</button>
@@ -160,7 +159,6 @@
             const d = doc.data();
             globalAccountKey = d['Acoount Keys'] || "";
 
-            // User Info
             document.getElementById('uName').innerText = d['Full Name'];
             document.getElementById('uClass').innerText = "Class " + (d['Class'] || "12").replace("+", "") + " | NEET";
             document.getElementById('uPhone').innerText = d['Phone Number'];
@@ -172,7 +170,6 @@
             document.getElementById('uGuardPhone').innerText = d['Guardian Phone Number'] || '-';
             if(d['Profile Picture']) document.getElementById('uPic').src = d['Profile Picture'];
 
-            // Enrolled Logic
             if(d['Batches'] && d['Batches'].length > 0) {
                 document.getElementById('enrollBadge').style.display = "inline-block";
                 loadBatches(d['Batches']);
@@ -206,19 +203,27 @@
             }
         }
 
-        // Modal Controls
-        function openSupport() { 
+        function openSupport(type) { 
+            const title = document.getElementById('supportTitle');
+            if(type === 'contact') {
+                title.innerText = "Want to change your Phone number and email";
+            } else {
+                title.innerText = "Want to change your parents name & phone number";
+            }
             document.getElementById('supportModal').style.display = 'flex';
             setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
         }
+
         function openProfileEdit() { 
             document.getElementById('profileModal').style.display = 'flex';
             setTimeout(() => document.getElementById('profileSheet').classList.add('show'), 10);
         }
+
         function closeModals() {
             document.querySelectorAll('.modal-sheet').forEach(s => s.classList.remove('show'));
             setTimeout(() => document.querySelectorAll('.modal-overlay').forEach(o => o.style.display='none'), 300);
         }
+
         function setG(v, e) {
             selectedGender = v;
             document.querySelectorAll('.gen-btn').forEach(b => b.classList.remove('active'));
@@ -228,7 +233,7 @@
         async function updateUser() {
             const dob = document.getElementById('inpDOB').value;
             const bl = document.getElementById('inpBlood').value;
-            if(!dob || !selectedGender) return alert("Fill required fields");
+            if(!dob || !selectedGender) return alert("Fill Gender and Date of Birth");
             await db.collection("Accounts").doc(docId).update({
                 "Date of Birth": dob,
                 "Gender": selectedGender,
