@@ -32,7 +32,6 @@
         .info-label { color: var(--text-gray); }
         .info-value { font-weight: 500; text-align: right; }
 
-        /* Batch Styling */
         .batch-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .batch-name-title { font-weight: 700; font-size: 14px; line-height: 1.4; flex: 1; }
         .by-text { font-size: 12px; color: #888; margin: 4px 0 15px 0; font-weight: 500; }
@@ -41,25 +40,17 @@
         .active-badge { background-color: var(--green-bg); color: var(--green-text); }
         .ended-badge { background-color: var(--red-bg); color: var(--red-text); }
 
-        /* Modals */
+        /* Modal styling */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
         .modal-sheet { background: white; width: 100%; border-radius: 25px 25px 0 0; padding: 30px 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s; }
         .modal-sheet.show { transform: translateY(0); }
-        
         .support-ui { text-align: center; padding: 10px 0; }
         .support-icon { width: 100px; margin-bottom: 20px; border-radius: 10px; }
         .support-ui h2 { font-size: 20px; margin-bottom: 10px; line-height: 1.3; font-weight: 700; }
         .support-ui p { color: var(--text-gray); margin-bottom: 25px; font-size: 15px; }
-        
         .submit-btn { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; }
         .close-x { position: absolute; right: 20px; top: 20px; font-size: 20px; color: #999; cursor: pointer; border: 1px solid #ddd; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; }
-
-        .field-group { margin-bottom: 15px; text-align: left; }
-        .field-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
-        .inp { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 12px; font-size: 15px; box-sizing: border-box; outline: none; }
-        .gender-grid { display: flex; gap: 10px; }
-        .gen-btn { flex: 1; padding: 12px; border: 1.5px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: 500; }
-        .gen-btn.active { border-color: var(--primary-blue); background: #f0f7ff; color: var(--primary-blue); }
+        .inp { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 12px; font-size: 15px; box-sizing: border-box; outline: none; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -102,10 +93,10 @@
         <div id="batchContainer"></div>
     </div>
 
-    <!-- Modals (Support & Profile Edit) -->
+    <!-- Modals -->
     <div class="modal-overlay" id="supportModal"><div class="modal-sheet" id="supportSheet"><span class="close-x" onclick="closeModals()">✕</span><div class="support-ui"><img src="https://i.ibb.co/XkSvDqMQ/Screenshot-2026-06-12-12-52-54-14-3afdd89a96b6b9857bd92ff143ff4005.jpg" class="support-icon"><h2 id="supportTitle">Details Change</h2><p>Please call our customer support</p><button class="submit-btn" onclick="window.location.href='tel:8914756767'">Call us</button></div></div></div>
 
-    <div class="modal-overlay" id="profileModal"><div class="modal-sheet" id="profileSheet"><span class="close-x" onclick="closeModals()">✕</span><h2 style="margin-top:0">Complete Your Profile</h2><div class="field-group"><label>DOB</label><input type="date" class="inp" id="inpDOB"></div><div class="field-group"><label>Gender</label><div class="gender-grid"><button class="gen-btn" onclick="setG('Male', this)">Male</button><button class="gen-btn" onclick="setG('Female', this)">Female</button><button class="gen-btn" onclick="setG('Other', this)">Other</button></div></div><div class="field-group"><label>Blood group</label><select class="inp" id="inpBlood"><option value="">Select one</option><option>A+</option><option>O+</option><option>B+</option><option>AB+</option></select></div><button class="submit-btn" onclick="updateUser()">Submit</button></div></div>
+    <div class="modal-overlay" id="profileModal"><div class="modal-sheet" id="profileSheet"><span class="close-x" onclick="closeModals()">✕</span><h2 style="margin-top:0">Complete Your Profile</h2><input type="date" class="inp" id="inpDOB"><select class="inp" id="inpBlood"><option value="">Select blood group</option><option>A+</option><option>O+</option><option>B+</option><option>AB+</option></select><button class="submit-btn" onclick="updateUser()">Submit</button></div></div>
 
     <script>
         const docId = localStorage.getItem("userDocId");
@@ -113,7 +104,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let selectedGender = "", globalAccountKey = "";
+        let globalAccountKey = "";
 
         async function init() {
             const doc = await db.collection("Accounts").doc(docId).get();
@@ -146,10 +137,10 @@
                 if(!bdoc.exists) continue;
                 const b = bdoc.data();
 
-                let institutionName = "Institution";
+                let instName = "Institution";
                 if(b.Institution) {
                     const idoc = await db.collection("Institutes").doc(b.Institution).get();
-                    if(idoc.exists) institutionName = idoc.data()['Full Name'];
+                    if(idoc.exists) instName = idoc.data()['Full Name'];
                 }
 
                 const statusClass = b.Status === "Active" ? "active-badge" : "ended-badge";
@@ -160,49 +151,28 @@
                             <span class="batch-name-title">${b['Batch Name']}</span>
                             <span class="status-badge ${statusClass}">${b.Status || 'Active'}</span>
                         </div>
-                        <div class="by-text">by ${institutionName}</div>
-
+                        <div class="by-text">by ${instName}</div>
                         <div class="info-row"><span class="info-label">Batch ID</span><span class="info-value">${bid}</span></div>
-                        <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">31-07-2026</span></div>
-                        <div class="info-row">
-                            <span class="info-label">Form Id</span>
-                            <span class="info-value">${globalAccountKey}</span>
-                        </div>
+                        <div class="info-row"><span class="info-label">Valid Till</span><span class="info-value">${b['Duration'] || '31-07-2026'}</span></div>
+                        <div class="info-row"><span class="info-label">Form Id</span><span class="info-value">${globalAccountKey}</span></div>
                     </div>
                 `;
             }
         }
 
-        function openSupport(type) { 
-            document.getElementById('supportTitle').innerText = (type === 'contact') ? 
-                "Want to change your Phone number and email" : 
-                "Want to change your parents name & phone number";
+        function openSupport(type) {
+            document.getElementById('supportTitle').innerText = (type === 'contact') ? "Want to change your Phone number and email" : "Want to change your parents name & phone number";
             document.getElementById('supportModal').style.display = 'flex';
             setTimeout(() => document.getElementById('supportSheet').classList.add('show'), 10);
         }
 
-        function openProfileEdit() { 
-            document.getElementById('profileModal').style.display = 'flex';
-            setTimeout(() => document.getElementById('profileSheet').classList.add('show'), 10);
-        }
-
-        function closeModals() {
-            document.querySelectorAll('.modal-sheet').forEach(s => s.classList.remove('show'));
-            setTimeout(() => document.querySelectorAll('.modal-overlay').forEach(o => o.style.display='none'), 300);
-        }
-
-        function setG(v, e) {
-            selectedGender = v;
-            document.querySelectorAll('.gen-btn').forEach(b => b.classList.remove('active'));
-            e.classList.add('active');
-        }
+        function openProfileEdit() { document.getElementById('profileModal').style.display = 'flex'; setTimeout(() => document.getElementById('profileSheet').classList.add('show'), 10); }
+        function closeModals() { document.querySelectorAll('.modal-sheet').forEach(s => s.classList.remove('show')); setTimeout(() => document.querySelectorAll('.modal-overlay').forEach(o => o.style.display='none'), 300); }
 
         async function updateUser() {
             const dob = document.getElementById('inpDOB').value;
-            if(!dob || !selectedGender) return alert("Fill Gender and Date of Birth");
-            await db.collection("Accounts").doc(docId).update({
-                "Date of Birth": dob, "Gender": selectedGender, "Blood Group": document.getElementById('inpBlood').value
-            });
+            if(!dob) return alert("Fill Date of Birth");
+            await db.collection("Accounts").doc(docId).update({ "Date of Birth": dob, "Blood Group": document.getElementById('inpBlood').value });
             closeModals();
             init();
         }
@@ -210,4 +180,4 @@
         init();
     </script>
 </body>
-    </html>
+                                                                                                                                                                                                                                                                                                                                                                                                               </html>
