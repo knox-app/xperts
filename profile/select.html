@@ -67,7 +67,10 @@
 
         .card-content { flex-grow: 1; }
         .card-title { font-size: 16px; font-weight: bold; color: #111; margin: 0 0 6px 0; }
-        .card-desc { font-size: 14px; color: #555; margin: 0 0 16px 0; line-height: 1.4; }
+        
+        .card-desc { font-size: 14px; color: #444; margin: 0 0 16px 0; line-height: 1.5; }
+        .inst-text { font-size: 13px; color: #008060; font-weight: 500; display: block; margin-top: 4px; }
+        
         .card-date { font-size: 12px; color: #888; margin: 0; }
     </style>
 </head>
@@ -88,6 +91,7 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
@@ -160,27 +164,56 @@
                 if (bDoc.exists) {
                     const bData = bDoc.data();
                     
-                    // --- DYNAMIC TITLE GENERATION (Class, For, Type) ---
+                    // --- 1. FETCH INSTITUTION NAME USING 'Full Name' ---
+                    let institutionName = "";
+                    if (bData['Institution']) {
+                        try {
+                            const instDoc = await db.collection("Institutes").doc(bData['Institution']).get();
+                            if (instDoc.exists) {
+                                const instData = instDoc.data();
+                                // EXACT FIELD NAME FROM YOUR DATABASE SCREENSHOT
+                                institutionName = instData['Full Name'] || ""; 
+                            }
+                        } catch (e) {
+                            console.error("Failed to fetch institution", e);
+                        }
+                    }
+                    
+                    // --- 2. FORMAT BATCH TYPE (Grammar rules) ---
+                    let rawType = bData['Batch Type'] || '';
+                    let displayType = rawType;
+                    if (rawType.toLowerCase().trim() === 'test-series' || rawType.toLowerCase().trim() === 'test series') {
+                        displayType = 'Test Series';
+                    } else if (displayType) {
+                        displayType = displayType.charAt(0).toUpperCase() + displayType.slice(1);
+                    }
+                    
+                    // --- 3. DYNAMIC TITLE GENERATION ---
                     const rawClass = bData['Class'] || '';
                     const clsDisplay = isNaN(rawClass) ? rawClass : `${rawClass}${getOrdinal(rawClass)}`;
                     
                     let titleParts = [];
                     if (clsDisplay) titleParts.push(clsDisplay);
-                    if (bData['For']) titleParts.push(bData['For']); // <-- Added "For" (e.g., LDC, NEET)
-                    if (bData['Batch Type']) titleParts.push(bData['Batch Type']);
+                    if (bData['For']) titleParts.push(bData['For']);
+                    if (displayType) titleParts.push(displayType);
                     
-                    const finalCardTitle = titleParts.join(', '); // Ex: "12th, LDC, Live"
+                    const finalCardTitle = titleParts.join(', '); 
                     
-                    // Format Date 
+                    // --- 4. FORMAT DATES AND BY TEXT ---
+                    const byInstHtml = institutionName ? `<span class="inst-text">by ${institutionName}</span>` : '';
                     const dateText = bData['From'] ? `Started on ${formatDate(bData['From'])}` : `Status: ${bData['Status'] || 'Active'}`;
 
+                    // --- 5. RENDER CARD ---
                     const card = document.createElement('div');
                     card.className = 'course-card';
                     card.innerHTML = `
                         <div class="radio-btn"></div>
                         <div class="card-content">
                             <p class="card-title">${finalCardTitle}</p>
-                            <p class="card-desc">${bData['Batch Name']}</p>
+                            <p class="card-desc">
+                                ${bData['Batch Name']}
+                                ${byInstHtml}
+                            </p>
                             <p class="card-date">${dateText}</p>
                         </div>
                     `;
@@ -216,7 +249,7 @@
 
             if (typeStr === 'live') window.location.href = "https://abc.xyz/live";
             else if (typeStr === 'recorded') window.location.href = "https://abc.xyz/RCD";
-            else if (typeStr === 'test-series') window.location.href = "https://abc.xyz/ts";
+            else if (typeStr === 'test-series' || typeStr === 'test series') window.location.href = "https://abc.xyz/ts";
             else window.location.href = "https://abc.xyz/default"; 
         }
 
