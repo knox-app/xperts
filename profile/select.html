@@ -8,13 +8,12 @@
         /* Modern UI matching the provided design */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #F0F4F8; /* Light bluish grey background */
+            background-color: #F0F4F8;
             margin: 0;
             padding: 0;
             color: #333;
         }
 
-        /* Top Header Area */
         .header {
             background-color: #FFFFFF;
             padding: 24px 20px;
@@ -24,132 +23,52 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
-        .header h1 {
-            font-size: 20px;
-            margin: 0 0 4px 0;
-            color: #111;
-        }
-
-        .header p {
-            font-size: 14px;
-            margin: 0;
-            color: #666;
-        }
-
+        .header h1 { font-size: 20px; margin: 0 0 4px 0; color: #111; }
+        .header p { font-size: 14px; margin: 0; color: #666; }
+        
         .close-btn {
-            position: absolute;
-            top: 24px;
-            right: 20px;
-            font-size: 24px;
-            color: #666;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            line-height: 1;
+            position: absolute; top: 24px; right: 20px;
+            font-size: 24px; color: #666; cursor: pointer;
+            background: none; border: none; padding: 0; line-height: 1;
         }
 
-        /* Main Container */
-        .container {
-            padding: 24px 20px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
+        .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
 
-        /* Section Title (e.g., 2 ACTIVE COURSES) */
         .section-title {
-            font-size: 13px;
-            color: #008060; /* Dark green */
-            font-weight: bold;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13px; color: #008060; font-weight: bold;
+            margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;
         }
 
-        /* Loading Spinner */
-        #loader {
-            text-align: center;
-            color: #0066FF;
-            margin-top: 40px;
-            font-weight: 500;
-        }
+        #loader { text-align: center; color: #0066FF; margin-top: 40px; font-weight: 500; }
 
-        /* Course List */
-        #course-list {
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-        }
+        #course-list { display: none; flex-direction: column; gap: 16px; }
 
-        /* Card Design */
         .course-card {
-            background: #FFFFFF;
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            cursor: pointer;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            background: #FFFFFF; border-radius: 16px; padding: 20px;
+            display: flex; align-items: flex-start; cursor: pointer;
+            border: 2px solid transparent; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             transition: all 0.2s ease;
         }
 
-        .course-card.selected {
-            border-color: #0066FF; /* Blue border for selected */
-        }
+        .course-card.selected { border-color: #0066FF; }
 
-        /* Radio Button Design */
         .radio-btn {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid #D1D5DB;
-            margin-right: 16px;
-            position: relative;
-            flex-shrink: 0;
-            margin-top: 2px;
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 2px solid #D1D5DB; margin-right: 16px;
+            position: relative; flex-shrink: 0; margin-top: 2px;
         }
 
-        .course-card.selected .radio-btn {
-            border-color: #0066FF;
-        }
-
+        .course-card.selected .radio-btn { border-color: #0066FF; }
         .course-card.selected .radio-btn::after {
-            content: '';
-            width: 12px;
-            height: 12px;
-            background-color: #0066FF;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            content: ''; width: 12px; height: 12px;
+            background-color: #0066FF; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
 
-        /* Card Typography */
-        .card-content {
-            flex-grow: 1;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #111;
-            margin: 0 0 6px 0;
-        }
-
-        .card-desc {
-            font-size: 14px;
-            color: #555;
-            margin: 0 0 16px 0;
-            line-height: 1.4;
-        }
-
-        .card-date {
-            font-size: 12px;
-            color: #888;
-            margin: 0;
-        }
+        .card-content { flex-grow: 1; }
+        .card-title { font-size: 16px; font-weight: bold; color: #111; margin: 0 0 6px 0; }
+        .card-desc { font-size: 14px; color: #555; margin: 0 0 16px 0; line-height: 1.4; }
+        .card-date { font-size: 12px; color: #888; margin: 0; }
     </style>
 </head>
 <body>
@@ -165,32 +84,24 @@
         
         <div id="courses-container" style="display: none;">
             <div class="section-title" id="active-courses-count">0 ACTIVE COURSES</div>
-            <div id="course-list">
-                <!-- Course Cards will be injected here -->
-            </div>
+            <div id="course-list"></div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
 
     <script>
-        // Check Login Persistence
         const userId = localStorage.getItem("userDocId");
-        if (!userId) {
-            window.location.href = "login.html"; 
-        }
+        if (!userId) window.location.href = "login.html"; 
 
-        // Initialize Firebase
         if (typeof firebaseConfig !== 'undefined' && !firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
 
         window.onload = async () => {
-            // 1. URL CHECK (?exct=cyrc) -> Clear saved data
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('exct') === 'cyrc') {
                 localStorage.removeItem('activeBatchId');
@@ -203,9 +114,7 @@
             const savedBatchType = localStorage.getItem("activeBatchType");
 
             try {
-                // Fetch User Details
                 const userDoc = await db.collection("Accounts").doc(userId).get();
-                
                 if (userDoc.exists) {
                     const userData = userDoc.data();
                     const batchIds = userData.Batches || []; 
@@ -214,15 +123,12 @@
                         document.getElementById('loader').innerHTML = "No courses assigned to your account.";
                     } 
                     else if (savedBatchId && savedBatchType && batchIds.includes(savedBatchId)) {
-                        // AGAR PEHLE SE SAVE HAI -> Direct Redirect according to type
                         redirectToType(savedBatchType);
                     }
                     else if (batchIds.length === 1) {
-                        // AGAR SIRF 1 COURSE HAI -> Uska data nikal kar direct redirect kardo
                         await handleSingleCourse(batchIds[0]);
                     } 
                     else {
-                        // MULTIPLE COURSES -> UI Render Karo
                         await renderCoursesList(batchIds);
                     }
                 } else {
@@ -234,21 +140,14 @@
             }
         };
 
-        // --- Handle Direct Redirect for 1 Course ---
         async function handleSingleCourse(batchId) {
             const bDoc = await db.collection("Batches").doc(batchId).get();
             if (bDoc.exists) {
                 const bData = bDoc.data();
-                
-                localStorage.setItem("activeBatchId", bDoc.id);
-                localStorage.setItem("activeBatchName", bData['Batch Name']);
-                localStorage.setItem("activeBatchType", bData['Batch Type']);
-                
-                redirectToType(bData['Batch Type']);
+                saveDataAndRedirect(bDoc.id, bData['Batch Name'], bData['Batch Type']);
             }
         }
 
-        // --- Render UI for Multiple Courses ---
         async function renderCoursesList(batchIds) {
             const courseListDiv = document.getElementById('course-list');
             const countTitle = document.getElementById('active-courses-count');
@@ -261,36 +160,37 @@
                 if (bDoc.exists) {
                     const bData = bDoc.data();
                     
-                    // Format text for UI
+                    // --- DYNAMIC TITLE GENERATION (Class, For, Type) ---
                     const rawClass = bData['Class'] || '';
                     const clsDisplay = isNaN(rawClass) ? rawClass : `${rawClass}${getOrdinal(rawClass)}`;
-                    const formattedDate = formatDate(bData['From']);
                     
+                    let titleParts = [];
+                    if (clsDisplay) titleParts.push(clsDisplay);
+                    if (bData['For']) titleParts.push(bData['For']); // <-- Added "For" (e.g., LDC, NEET)
+                    if (bData['Batch Type']) titleParts.push(bData['Batch Type']);
+                    
+                    const finalCardTitle = titleParts.join(', '); // Ex: "12th, LDC, Live"
+                    
+                    // Format Date 
+                    const dateText = bData['From'] ? `Started on ${formatDate(bData['From'])}` : `Status: ${bData['Status'] || 'Active'}`;
+
                     const card = document.createElement('div');
                     card.className = 'course-card';
                     card.innerHTML = `
                         <div class="radio-btn"></div>
                         <div class="card-content">
-                            <p class="card-title">${clsDisplay}, ${bData['Batch Type'] || 'Course'}</p>
+                            <p class="card-title">${finalCardTitle}</p>
                             <p class="card-desc">${bData['Batch Name']}</p>
-                            <p class="card-date">Started on ${formattedDate}</p>
+                            <p class="card-date">${dateText}</p>
                         </div>
                     `;
                     
-                    // ON CLICK EVENT
                     card.onclick = () => {
-                        // 1. Visual selection (add blue border & radio dot)
                         document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
                         card.classList.add('selected');
                         
-                        // 2. Save Data
-                        localStorage.setItem("activeBatchId", bDoc.id);
-                        localStorage.setItem("activeBatchName", bData['Batch Name']);
-                        localStorage.setItem("activeBatchType", bData['Batch Type']);
-                        
-                        // 3. Redirect with a tiny delay so user sees the radio button being selected
                         setTimeout(() => {
-                            redirectToType(bData['Batch Type']);
+                            saveDataAndRedirect(bDoc.id, bData['Batch Name'], bData['Batch Type']);
                         }, 350);
                     };
 
@@ -303,58 +203,40 @@
             courseListDiv.style.display = 'flex';
         }
 
-        // --- REDIRECTION LOGIC BASED ON TYPE ---
-        function redirectToType(batchType) {
-            if (!batchType) {
-                window.location.href = "https://abc.xyz/default"; // Fallback URL
-                return;
-            }
-
-            const typeStr = batchType.toLowerCase().trim();
-
-            if (typeStr === 'live') {
-                window.location.href = "https://abc.xyz/live";
-            } 
-            else if (typeStr === 'recorded') {
-                window.location.href = "https://abc.xyz/RCD";
-            } 
-            else if (typeStr === 'test-series') {
-                window.location.href = "https://abc.xyz/ts";
-            } 
-            else {
-                // In case of any other type
-                window.location.href = "https://abc.xyz/default"; 
-            }
+        function saveDataAndRedirect(id, name, type) {
+            localStorage.setItem("activeBatchId", id);
+            localStorage.setItem("activeBatchName", name);
+            localStorage.setItem("activeBatchType", type);
+            redirectToType(type);
         }
 
-        // --- Utility: Get th, st, nd, rd (e.g. 10 -> 10th) ---
+        function redirectToType(batchType) {
+            if (!batchType) { window.location.href = "https://abc.xyz/default"; return; }
+            const typeStr = batchType.toLowerCase().trim();
+
+            if (typeStr === 'live') window.location.href = "https://abc.xyz/live";
+            else if (typeStr === 'recorded') window.location.href = "https://abc.xyz/RCD";
+            else if (typeStr === 'test-series') window.location.href = "https://abc.xyz/ts";
+            else window.location.href = "https://abc.xyz/default"; 
+        }
+
         function getOrdinal(n) {
             let num = parseInt(n);
             if (isNaN(num)) return '';
-            let s = ["th", "st", "nd", "rd"];
-            let v = num % 100;
+            let s = ["th", "st", "nd", "rd"], v = num % 100;
             return (s[(v - 20) % 10] || s[v] || s[0]);
         }
 
-        // --- Utility: Format Date (e.g., "30/01/2026" -> "30th Jan 2026") ---
         function formatDate(dateStr) {
-            if(!dateStr) return "N/A";
+            if(!dateStr) return "";
             const parts = dateStr.split('/');
             if(parts.length !== 3) return dateStr;
-            
             const dayNum = parseInt(parts[0]);
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const monthText = months[parseInt(parts[1]) - 1];
-            const year = parts[2];
-            
-            return `${dayNum}${getOrdinal(dayNum)} ${monthText} ${year}`;
+            return `${dayNum}${getOrdinal(dayNum)} ${months[parseInt(parts[1]) - 1]} ${parts[2]}`;
         }
 
-        // Close Icon logic
-        function goBack() {
-            // Optional: Define where the X icon takes them
-            window.history.back();
-        }
+        function goBack() { window.history.back(); }
     </script>
 </body>
 </html>
