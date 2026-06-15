@@ -3,96 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Live Class Management</title>
+    <title>Xpert Admin - Live Class Creator</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
 
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --primary: #4285f4; --border: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: var(--card); padding: 25px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); border: 1px solid var(--border); }
-        h2 { margin: 0 0 20px 0; color: var(--primary); font-weight: 500; display: flex; align-items: center; justify-content: space-between;}
+        :root { --bg: #0f0f0f; --card: #1a1a1a; --text: #f0f0f0; --accent: #3ea6ff; --border: #333; --error: #ff4444; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .container { background: var(--card); padding: 25px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border); }
+        h2 { margin-top: 0; font-weight: 400; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.4rem; }
         .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-        input, select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: #252525; color: white; box-sizing: border-box; transition: 0.2s; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); background: #2a2a2a; }
-        button { background: var(--primary); border: none; padding: 14px; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px;}
-        button:hover { background: #3367d6; filter: brightness(1.1); }
-        button:disabled { background: #444; cursor: not-allowed; opacity: 0.6; }
-        #main-admin, #teacher-override-wrap { display: none; }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .status { font-size: 0.85rem; margin-top: 15px; text-align: center; color: #bbb; min-height: 1.2em;}
-        .badge { font-size: 0.7rem; background: #333; padding: 4px 8px; border-radius: 4px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #aaa; }
+        input, select, button { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: #222; color: white; box-sizing: border-box; font-size: 0.95rem; }
+        button { background: var(--accent); color: black; border: none; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        button:disabled { background: #444; cursor: not-allowed; color: #777; }
+        .secondary-btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-size: 0.8rem; padding: 6px; margin-top: 5px; }
+        #main-admin, #replacement-section { display: none; }
+        .yt-status { padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 15px; text-align: center; }
+        .yt-synced { background: rgba(62, 166, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); }
+        .yt-pending { background: rgba(255, 68, 68, 0.1); border: 1px solid var(--error); color: var(--error); }
     </style>
 </head>
 <body>
 
-    <!-- STEP 1: LOGIN/VERIFY -->
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="container">
-        <h2>Admin Verification</h2>
+        <h2>Administrator Access</h2>
         <div class="form-group">
             <label>Institution ID</label>
             <input type="text" id="inst-id-input" placeholder="Enter ID (e.g. INSPIREJWR3247)">
         </div>
-        <button id="verify-btn" onclick="verifyInstitution()">Enter Dashboard</button>
-        <div id="login-status" class="status"></div>
+        <button onclick="verifyAndLogin()">Verify & Login</button>
+        <p id="login-error" style="color:var(--error); font-size:0.8rem; display:none; margin-top:10px;">Invalid Institution ID.</p>
     </div>
 
-    <!-- STEP 2: CREATE CLASS -->
+    <!-- MAIN DASHBOARD -->
     <div id="main-admin" class="container">
-        <h2>Schedule Live <span id="inst-tag" class="badge"></span></h2>
+        <div id="yt-indicator" class="yt-status yt-pending">YouTube Sync Required</div>
+        <button id="sync-btn" onclick="syncYouTube()">Authorize YouTube</button>
         
+        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+
         <div class="form-group">
-            <label>Class Title</label>
-            <input type="text" id="class-title" placeholder="e.g. Chemical Bonding Part 1">
+            <label>Select Batch</label>
+            <select id="batch-select" onchange="loadSubjects()">
+                <option value="">Choose a Batch...</option>
+            </select>
         </div>
 
-        <div class="row">
-            <div class="form-group">
-                <label>Select Batch</label>
-                <select id="batch-select" onchange="handleBatchChange()">
-                    <option value="">Select Batch</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Subject</label>
-                <select id="subject-select" onchange="handleSubjectChange()">
-                    <option value="">Select Subject</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>Subject</label>
+            <select id="subject-select" onchange="handleSubjectChange()" disabled>
+                <option value="">Select Subject</option>
+            </select>
         </div>
 
         <div class="form-group">
             <label>Chapter</label>
-            <select id="chapter-select">
+            <select id="chapter-select" disabled>
                 <option value="">Select Chapter</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Teacher 
-                <span style="float:right; cursor:pointer; color:var(--primary); font-size:0.7rem" onclick="toggleTeacherOverride()">[Replace Teacher]</span>
-            </label>
-            <div id="teacher-fixed">
-                <input type="text" id="teacher-display" readonly style="background:#1a1a1a; color:#888;">
-                <input type="hidden" id="teacher-id">
+            <label>Assigned Teacher</label>
+            <div style="display:flex; gap: 5px;">
+                <input type="text" id="teacher-name-display" readonly style="flex:1">
+                <input type="hidden" id="teacher-id-val">
             </div>
-            <div id="teacher-override-wrap">
-                <select id="teacher-override-select">
-                    <option value="">Choose Replacement Teacher...</option>
-                </select>
-            </div>
+            <button class="secondary-btn" id="replace-btn" onclick="showTeacherReplacement()" disabled>Emergency: Replace Teacher</button>
         </div>
 
-        <div class="row">
-            <div class="form-group"><label>Date</label><input type="date" id="class-date"></div>
-            <div class="form-group"><label>Time (From)</label><input type="time" id="time-from"></div>
+        <div id="replacement-section" class="form-group">
+            <label>Select Replacement (From Institute)</label>
+            <select id="replacement-select" onchange="applyReplacement()">
+                <option value="">Choose Teacher...</option>
+            </select>
         </div>
 
-        <div class="row">
-            <div class="form-group"><label>Time (To)</label><input type="time" id="time-to"></div>
+        <div class="form-group">
+            <label>Class Title</label>
+            <input type="text" id="class-title" placeholder="Lecture Title">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="class-date">
+            </div>
             <div class="form-group">
                 <label>Audience</label>
                 <select id="audience-select">
@@ -102,216 +103,206 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Doubts / Comments</label>
-            <select id="comments-toggle">
-                <option value="on">Enabled</option>
-                <option value="off">Disabled</option>
-            </select>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>From Time</label>
+                <input type="time" id="time-from">
+            </div>
+            <div class="form-group">
+                <label>To Time</label>
+                <input type="time" id="time-to">
+            </div>
         </div>
 
-        <button id="create-btn" onclick="handleSyncAndCreate()">Sync YouTube & Create Class</button>
-        <div id="status-msg" class="status"></div>
+        <button id="create-btn" onclick="createBroadcast()" disabled>Create Live Class</button>
+        <p id="status-msg" style="text-align:center; font-size: 0.85rem; margin-top:10px;"></p>
     </div>
 
 <script>
     const CLIENT_ID = '878851646059-df1b22bspju27a2gjb4o9n4mrtpo7kkr.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
     
-    let db, currentInstId = "", tokenClient, accessToken = null;
-    let batchesStore = {}, teachersStore = [];
+    let db, currentInstId, tokenClient, accessToken = null;
+    let cachedBatches = {};
 
     window.onload = () => {
         if (typeof firebaseConfig !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('session')) {
-                document.getElementById('inst-id-input').value = urlParams.get('session');
-                verifyInstitution();
-            }
+            const session = new URLSearchParams(window.location.search).get('session');
+            if (session) { document.getElementById('inst-id-input').value = session; verifyAndLogin(); }
         } else { setTimeout(window.onload, 500); }
     };
+
+    async function verifyAndLogin() {
+        const id = document.getElementById('inst-id-input').value.trim();
+        if(!id) return;
+        
+        const instDoc = await db.collection('Institutes').doc(id).get();
+        if (instDoc.exists) {
+            currentInstId = id;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-admin').style.display = 'block';
+            loadBatches();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
 
     function initClient() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID, scope: SCOPES,
-            callback: (resp) => { accessToken = resp.access_token; createYouTubeBroadcast(); }
+            callback: (resp) => {
+                accessToken = resp.access_token;
+                document.getElementById('yt-indicator').innerText = "YouTube Synced ✅";
+                document.getElementById('yt-indicator').className = "yt-status yt-synced";
+                document.getElementById('sync-btn').style.display = "none";
+                document.getElementById('create-btn').disabled = false;
+            },
         });
     }
 
-    async function verifyInstitution() {
-        const id = document.getElementById('inst-id-input').value.trim();
-        const status = document.getElementById('login-status');
-        if(!id) return;
+    function syncYouTube() { tokenClient.requestAccessToken({prompt: ''}); }
+
+    async function loadBatches() {
+        const snap = await db.collection('Batches').where('Institution', '==', currentInstId).get();
+        const select = document.getElementById('batch-select');
+        snap.forEach(doc => {
+            cachedBatches[doc.id] = doc.data();
+            let opt = document.createElement('option');
+            opt.value = doc.id;
+            opt.innerText = doc.data()["Batch Name"];
+            select.appendChild(opt);
+        });
+    }
+
+    function loadSubjects() {
+        const bId = document.getElementById('batch-select').value;
+        const subSel = document.getElementById('subject-select');
+        subSel.innerHTML = '<option value="">Select Subject</option>';
+        subSel.disabled = !bId;
         
-        status.innerText = "Verifying Institution...";
-        try {
-            const doc = await db.collection('Institutes').doc(id).get();
-            if (doc.exists) {
-                currentInstId = id;
-                document.getElementById('inst-tag').innerText = id;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-admin').style.display = 'block';
-                loadInitialData();
-            } else {
-                status.innerText = "Error: Invalid Institution ID";
-                status.style.color = "#ff5252";
-            }
-        } catch (e) { status.innerText = "Error: " + e.message; }
-    }
-
-    async function loadInitialData() {
-        // Load Batches
-        const bSnap = await db.collection('Batches').where('Institution', '==', currentInstId).get();
-        const bSelect = document.getElementById('batch-select');
-        bSnap.forEach(doc => {
-            batchesStore[doc.id] = doc.data();
-            let opt = new Option(doc.data()["Batch Name"] || doc.id, doc.id);
-            bSelect.add(opt);
-        });
-
-        // Load All Teachers for Override
-        const tSnap = await db.collection('Accounts').where('Type', '==', 'Teacher').get();
-        const tSelect = document.getElementById('teacher-override-select');
-        tSnap.forEach(doc => {
-            teachersStore.push({id: doc.id, name: doc.data()["Full Name"]});
-            tSelect.add(new Option(doc.data()["Full Name"], doc.id));
-        });
-    }
-
-    function handleBatchChange() {
-        const batchId = document.getElementById('batch-select').value;
-        const sSelect = document.getElementById('subject-select');
-        sSelect.innerHTML = '<option value="">Select Subject</option>';
-        
-        if (batchId && batchesStore[batchId]) {
-            const subsRaw = batchesStore[batchId].Subjects;
-            // Handle if subjects is a string like "Botany; Physics" or an array
-            const subjects = Array.isArray(subsRaw) ? subsRaw : (subsRaw ? subsRaw.split(';').map(s => s.trim()) : []);
-            subjects.forEach(s => sSelect.add(new Option(s, s)));
+        if (bId) {
+            cachedBatches[bId].Subjects.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s; opt.innerText = s;
+                subSel.appendChild(opt);
+            });
         }
     }
 
     async function handleSubjectChange() {
-        const batchId = document.getElementById('batch-select').value;
-        const subject = document.getElementById('subject-select').value;
-        const cSelect = document.getElementById('chapter-select');
-        cSelect.innerHTML = '<option value="">Loading Chapters...</option>';
+        const bId = document.getElementById('batch-select').value;
+        const sub = document.getElementById('subject-select').value;
+        if (!bId || !sub) return;
 
-        if (!batchId || !subject) return;
+        // 1. Load Chapters from 'content' using Batch ID and Subject
+        const chapSel = document.getElementById('chapter-select');
+        chapSel.disabled = false;
+        chapSel.innerHTML = '<option>Loading...</option>';
+        const contentSnap = await db.collection('content').where('Id', '==', bId).where('Subject', '==', sub).get();
+        chapSel.innerHTML = '<option value="">Select Chapter</option>';
+        contentSnap.forEach(d => {
+            let opt = document.createElement('option');
+            opt.value = d.id; opt.innerText = d.data().Name;
+            chapSel.appendChild(opt);
+        });
 
-        // 1. Fetch Chapters from content
-        const cSnap = await db.collection('content')
-            .where('Id', '==', batchId)
-            .where('Subject', '==', subject).get();
-        
-        cSelect.innerHTML = '<option value="">Select Chapter</option>';
-        cSnap.forEach(doc => cSelect.add(new Option(doc.data().Name, doc.id)));
+        // 2. Load Default Teacher from Batch
+        const teachersArr = cachedBatches[bId].Teachers || [];
+        let tId = "";
+        teachersArr.forEach(m => { if(m[sub]) tId = m[sub]; });
 
-        // 2. Auto-assign Teacher from Batch array of maps
-        const batch = batchesStore[batchId];
-        let teacherId = "";
-        if(batch.Teachers && Array.isArray(batch.Teachers)) {
-            batch.Teachers.forEach(map => { if(map[subject]) teacherId = map[subject]; });
-        }
-
-        if(teacherId) {
-            const tDoc = await db.collection('Accounts').doc(teacherId).get();
-            if(tDoc.exists) {
-                document.getElementById('teacher-display').value = tDoc.data()["Full Name"];
-                document.getElementById('teacher-id').value = teacherId;
-            }
-        } else {
-            document.getElementById('teacher-display').value = "None assigned in Batch";
-            document.getElementById('teacher-id').value = "";
+        if(tId) {
+            const tDoc = await db.collection('Accounts').doc(tId).get();
+            document.getElementById('teacher-name-display').value = tDoc.exists ? tDoc.data()["Full Name"] : "Unknown";
+            document.getElementById('teacher-id-val').value = tId;
+            document.getElementById('replace-btn').disabled = false;
         }
     }
 
-    function toggleTeacherOverride() {
-        const wrap = document.getElementById('teacher-override-wrap');
-        const fixed = document.getElementById('teacher-fixed');
-        const isHidden = window.getComputedStyle(wrap).display === "none";
-        wrap.style.display = isHidden ? "block" : "none";
-        fixed.style.display = isHidden ? "none" : "block";
+    async function showTeacherReplacement() {
+        const section = document.getElementById('replacement-section');
+        section.style.display = 'block';
+        const relSel = document.getElementById('replacement-select');
+        relSel.innerHTML = '<option>Loading teachers...</option>';
+
+        // Query all teachers in this institute
+        const snap = await db.collection('Accounts')
+            .where('Type', '==', 'Teacher')
+            .where('Institute', 'array-contains', currentInstId)
+            .get();
+
+        relSel.innerHTML = '<option value="">Choose Teacher...</option>';
+        snap.forEach(doc => {
+            let opt = document.createElement('option');
+            opt.value = doc.id;
+            opt.innerText = doc.data()["Full Name"];
+            relSel.appendChild(opt);
+        });
     }
 
-    function generateCustomId() {
-        const rand = Math.floor(Math.random() * 9000000000) + 100000;
-        return "XPRTLCR" + rand;
-    }
-
-    function handleSyncAndCreate() {
-        if(!document.getElementById('class-title').value || !document.getElementById('batch-select').value) {
-            alert("Please fill necessary fields."); return;
+    function applyReplacement() {
+        const sel = document.getElementById('replacement-select');
+        if(sel.value) {
+            document.getElementById('teacher-name-display').value = sel.options[sel.selectedIndex].text;
+            document.getElementById('teacher-id-val').value = sel.value;
         }
-        document.getElementById('create-btn').disabled = true;
-        document.getElementById('status-msg').innerText = "Initiating Google Auth...";
-        tokenClient.requestAccessToken({prompt: ''});
     }
 
-    async function createYouTubeBroadcast() {
+    function generateDocID() {
+        const digits = Math.floor(1000000 + Math.random() * 900000000).toString().substring(0, 8);
+        return `XPRTLCR${digits}`;
+    }
+
+    async function createBroadcast() {
         const title = document.getElementById('class-title').value;
         const date = document.getElementById('class-date').value;
-        const time = document.getElementById('time-from').value;
-        const audience = document.getElementById('audience-select').value;
-        
-        const startTime = new Date(`${date}T${time}:00`).toISOString();
-        const privacy = (audience === 'All') ? 'public' : 'unlisted';
+        const start = document.getElementById('time-from').value;
+        const status = document.getElementById('status-msg');
 
-        document.getElementById('status-msg').innerText = "Creating YouTube Stream...";
+        if(!title || !date || !start) return alert("Fill required fields!");
+
+        status.innerText = "Creating YouTube Event...";
+        const scheduledTime = new Date(`${date}T${start}:00`).toISOString();
+        const privacy = document.getElementById('audience-select').value === 'All' ? 'public' : 'unlisted';
+
         try {
             const resp = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    snippet: { title: title, scheduledStartTime: startTime },
+                    snippet: { title: title, scheduledStartTime: scheduledTime },
                     status: { privacyStatus: privacy, selfDeclaredMadeForKids: false }
                 })
             });
             const data = await resp.json();
-            if (data.id) saveToFirestore(data.id);
+            if(data.id) saveLecture(data.id);
             else throw new Error(data.error.message);
-        } catch (e) {
-            document.getElementById('status-msg').innerText = "YT Error: " + e.message;
-            document.getElementById('create-btn').disabled = false;
-        }
+        } catch(e) { status.innerText = "YT Error: " + e.message; }
     }
 
-    async function saveToFirestore(ytId) {
-        document.getElementById('status-msg').innerText = "Saving Class Document...";
+    async function saveLecture(ytId) {
+        document.getElementById('status-msg').innerText = "Finalizing in Firestore...";
+        const customID = generateDocID();
         
-        // Check if manual override is used
-        let finalTeacherId = document.getElementById('teacher-id').value;
-        if(window.getComputedStyle(document.getElementById('teacher-override-wrap')).display !== "none") {
-            finalTeacherId = document.getElementById('teacher-override-select').value;
-        }
-
-        const newId = generateCustomId();
-        const payload = {
+        const lectureData = {
             Tittle: document.getElementById('class-title').value,
-            Teacher: finalTeacherId,
-            video: `youtube.com/watch?v=${ytId}`,
+            Teacher: document.getElementById('teacher-id-val').value,
             Subject: document.getElementById('subject-select').value,
-            ChapterId: document.getElementById('chapter-select').value,
-            BatchId: document.getElementById('batch-select').value,
-            Date: document.getElementById('class-date').value,
-            TimeFrom: document.getElementById('time-from').value,
-            TimeTo: document.getElementById('time-to').value,
-            Comments: document.getElementById('comments-toggle').value,
-            Audience: document.getElementById('audience-select').value,
-            Institution: currentInstId,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            video: `youtube.com/watch?v=${ytId}`,
+            batch_id: document.getElementById('batch-select').value,
+            chapter_id: document.getElementById('chapter-select').value,
+            date: document.getElementById('class-date').value,
+            time_from: document.getElementById('time-from').value,
+            time_to: document.getElementById('time-to').value,
+            audience: document.getElementById('audience-select').value,
+            institute: currentInstId
         };
 
-        try {
-            await db.collection('Lectures').doc(newId).set(payload);
-            document.getElementById('status-msg').style.color = "#4caf50";
-            document.getElementById('status-msg').innerText = `Success! Class Created: ${newId}`;
-            setTimeout(() => location.reload(), 3000);
-        } catch (e) {
-            document.getElementById('status-msg').innerText = "Database Error: " + e.message;
-        }
+        await db.collection('Lectures').doc(customID).set(lectureData);
+        document.getElementById('status-msg').innerHTML = `<b style="color:var(--accent)">Success! ID: ${customID}</b>`;
+        setTimeout(() => location.reload(), 3000);
     }
 </script>
 </body>
