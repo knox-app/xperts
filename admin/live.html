@@ -20,7 +20,7 @@
         button { background: var(--accent); color: black; border: none; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         button:hover { opacity: 0.9; }
         button:disabled { background: #444; cursor: not-allowed; color: #777; }
-        .secondary-btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-size: 0.8rem; padding: 6px; margin-top: 5px; }
+        .secondary-btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-size: 0.75rem; padding: 5px; margin-top: 5px; cursor: pointer; border-radius: 4px;}
         #main-admin, #replacement-section { display: none; }
         .yt-status { padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 15px; text-align: center; }
         .yt-synced { background: rgba(62, 166, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); }
@@ -29,7 +29,6 @@
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="container">
         <h2>Administrator Access</h2>
         <div class="form-group">
@@ -40,7 +39,6 @@
         <p id="login-error" style="color:var(--error); font-size:0.8rem; display:none; margin-top:10px;">Invalid Institution ID.</p>
     </div>
 
-    <!-- MAIN DASHBOARD -->
     <div id="main-admin" class="container">
         <div id="yt-indicator" class="yt-status yt-pending">YouTube Sync Required</div>
         <button id="sync-btn" onclick="syncYouTube()">Authorize YouTube</button>
@@ -70,14 +68,12 @@
 
         <div class="form-group">
             <label>Assigned Teacher</label>
-            <div style="display:flex; gap: 5px;">
-                <input type="text" id="teacher-name-display" readonly style="flex:1">
-                <input type="hidden" id="teacher-id-val">
-            </div>
+            <input type="text" id="teacher-name-display" readonly placeholder="Auto-assigned">
+            <input type="hidden" id="teacher-id-val">
             <button class="secondary-btn" id="replace-btn" onclick="showTeacherReplacement()" disabled>Emergency: Replace Teacher</button>
         </div>
 
-        <div id="replacement-section" class="form-group">
+        <div id="replacement-section" class="form-group" style="border: 1px dashed #444; padding: 10px; border-radius: 5px;">
             <label>Select Replacement (From Institute)</label>
             <select id="replacement-select" onchange="applyReplacement()">
                 <option value="">Choose Teacher...</option>
@@ -137,16 +133,13 @@
     async function verifyAndLogin() {
         const id = document.getElementById('inst-id-input').value.trim();
         if(!id) return;
-        
         const instDoc = await db.collection('Institutes').doc(id).get();
         if (instDoc.exists) {
             currentInstId = id;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-admin').style.display = 'block';
             loadBatches();
-        } else {
-            document.getElementById('login-error').style.display = 'block';
-        }
+        } else { document.getElementById('login-error').style.display = 'block'; }
     }
 
     function initClient() {
@@ -176,17 +169,24 @@
         });
     }
 
+    // FIXED: Splitting the "Subjects" string correctly
     function loadSubjects() {
         const bId = document.getElementById('batch-select').value;
         const subSel = document.getElementById('subject-select');
         subSel.innerHTML = '<option value="">Select Subject</option>';
         subSel.disabled = !bId;
         
-        if (bId) {
-            cachedBatches[bId].Subjects.forEach(s => {
-                let opt = document.createElement('option');
-                opt.value = s; opt.innerText = s;
-                subSel.appendChild(opt);
+        if (bId && cachedBatches[bId]) {
+            const subjectString = cachedBatches[bId].Subjects || "";
+            // Split by semicolon and trim whitespace
+            const subjectList = subjectString.split(';').map(s => s.trim());
+            
+            subjectList.forEach(s => {
+                if (s) {
+                    let opt = document.createElement('option');
+                    opt.value = s; opt.innerText = s;
+                    subSel.appendChild(opt);
+                }
             });
         }
     }
@@ -196,11 +196,14 @@
         const sub = document.getElementById('subject-select').value;
         if (!bId || !sub) return;
 
-        // 1. Load Chapters from 'content' using Batch ID and Subject
         const chapSel = document.getElementById('chapter-select');
         chapSel.disabled = false;
-        chapSel.innerHTML = '<option>Loading...</option>';
-        const contentSnap = await db.collection('content').where('Id', '==', bId).where('Subject', '==', sub).get();
+        chapSel.innerHTML = '<option>Loading chapters...</option>';
+        
+        const contentSnap = await db.collection('content')
+            .where('Id', '==', bId)
+            .where('Subject', '==', sub).get();
+            
         chapSel.innerHTML = '<option value="">Select Chapter</option>';
         contentSnap.forEach(d => {
             let opt = document.createElement('option');
@@ -208,26 +211,23 @@
             chapSel.appendChild(opt);
         });
 
-        // 2. Load Default Teacher from Batch
         const teachersArr = cachedBatches[bId].Teachers || [];
         let tId = "";
         teachersArr.forEach(m => { if(m[sub]) tId = m[sub]; });
 
         if(tId) {
             const tDoc = await db.collection('Accounts').doc(tId).get();
-            document.getElementById('teacher-name-display').value = tDoc.exists ? tDoc.data()["Full Name"] : "Unknown";
+            document.getElementById('teacher-name-display').value = tDoc.exists ? tDoc.data()["Full Name"] : "ID: " + tId;
             document.getElementById('teacher-id-val').value = tId;
             document.getElementById('replace-btn').disabled = false;
         }
     }
 
     async function showTeacherReplacement() {
-        const section = document.getElementById('replacement-section');
-        section.style.display = 'block';
+        document.getElementById('replacement-section').style.display = 'block';
         const relSel = document.getElementById('replacement-select');
-        relSel.innerHTML = '<option>Loading teachers...</option>';
+        relSel.innerHTML = '<option>Searching staff...</option>';
 
-        // Query all teachers in this institute
         const snap = await db.collection('Accounts')
             .where('Type', '==', 'Teacher')
             .where('Institute', 'array-contains', currentInstId)
@@ -236,8 +236,7 @@
         relSel.innerHTML = '<option value="">Choose Teacher...</option>';
         snap.forEach(doc => {
             let opt = document.createElement('option');
-            opt.value = doc.id;
-            opt.innerText = doc.data()["Full Name"];
+            opt.value = doc.id; opt.innerText = doc.data()["Full Name"];
             relSel.appendChild(opt);
         });
     }
@@ -245,25 +244,23 @@
     function applyReplacement() {
         const sel = document.getElementById('replacement-select');
         if(sel.value) {
-            document.getElementById('teacher-name-display').value = sel.options[sel.selectedIndex].text;
+            document.getElementById('teacher-name-display').value = sel.options[sel.selectedIndex].text + " (Replaced)";
             document.getElementById('teacher-id-val').value = sel.value;
         }
     }
 
     function generateDocID() {
-        const digits = Math.floor(1000000 + Math.random() * 900000000).toString().substring(0, 8);
-        return `XPRTLCR${digits}`;
+        const rand = Math.floor(10000000 + Math.random() * 90000000).toString();
+        return `XPRTLCR${rand}`;
     }
 
     async function createBroadcast() {
         const title = document.getElementById('class-title').value;
         const date = document.getElementById('class-date').value;
         const start = document.getElementById('time-from').value;
-        const status = document.getElementById('status-msg');
+        if(!title || !date || !start) return alert("Please fill Title, Date and Start Time");
 
-        if(!title || !date || !start) return alert("Fill required fields!");
-
-        status.innerText = "Creating YouTube Event...";
+        document.getElementById('status-msg').innerText = "Syncing with YouTube Live...";
         const scheduledTime = new Date(`${date}T${start}:00`).toISOString();
         const privacy = document.getElementById('audience-select').value === 'All' ? 'public' : 'unlisted';
 
@@ -279,11 +276,11 @@
             const data = await resp.json();
             if(data.id) saveLecture(data.id);
             else throw new Error(data.error.message);
-        } catch(e) { status.innerText = "YT Error: " + e.message; }
+        } catch(e) { document.getElementById('status-msg').innerText = "YT Error: " + e.message; }
     }
 
     async function saveLecture(ytId) {
-        document.getElementById('status-msg').innerText = "Finalizing in Firestore...";
+        document.getElementById('status-msg').innerText = "Saving Class Document...";
         const customID = generateDocID();
         
         const lectureData = {
@@ -297,11 +294,12 @@
             time_from: document.getElementById('time-from').value,
             time_to: document.getElementById('time-to').value,
             audience: document.getElementById('audience-select').value,
-            institute: currentInstId
+            institute: currentInstId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         await db.collection('Lectures').doc(customID).set(lectureData);
-        document.getElementById('status-msg').innerHTML = `<b style="color:var(--accent)">Success! ID: ${customID}</b>`;
+        document.getElementById('status-msg').innerHTML = `<b style="color:var(--accent)">Success! Created: ${customID}</b>`;
         setTimeout(() => location.reload(), 3000);
     }
 </script>
