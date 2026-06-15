@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Chapters</title>
+    <style>
+        :root { --subject-color: #555; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #F8F9FB; margin: 0; padding: 0; }
+        
+        /* Dynamic Header */
+        .header {
+            background-color: #FFFFFF;
+            padding: 30px 20px;
+            border-bottom: 8px solid var(--subject-color);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .header h1 { font-size: 26px; margin: 0; color: #111; display: flex; align-items: center; }
+        .header h1 span { font-size: 18px; margin-left: 10px; opacity: 0.6; }
+        .header p { font-size: 15px; margin: 8px 0 0; color: #666; font-weight: 500; }
+
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+        .section-label { 
+            font-size: 12px; font-weight: bold; color: var(--subject-color); 
+            margin: 20px 0 12px 5px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        #loader { text-align: center; margin-top: 50px; color: #888; font-weight: 500; }
+
+        .chapter-card {
+            background: #fff; border-radius: 16px; padding: 18px;
+            margin-bottom: 12px; display: flex; align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer;
+            border: 1px solid #f0f0f0; transition: 0.2s;
+        }
+        .chapter-card:active { transform: scale(0.98); background: #fafafa; }
+        .chapter-info { flex-grow: 1; }
+        .chapter-name { font-size: 16px; font-weight: 600; color: #333; margin: 0; }
+        .arrow { color: var(--subject-color); font-size: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header" id="mainHeader">
+        <h1 id="subjectTitle">Loading... <span id="classTag">Class 10</span></h1>
+        <p id="batchNameDisplay">Course Name</p>
+    </div>
+
+    <div class="container">
+        <div id="loader">Fetching your chapters...</div>
+        <div class="section-label" id="listLabel" style="display:none;">All Chapters</div>
+        <div id="chapterList"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+
+    <script>
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 1. Get Session Data
+        const activeBatchId = localStorage.getItem("activeBatchId");
+        const activeBatchName = localStorage.getItem("activeBatchName");
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const subject = urlParams.get('sub') || "English";
+
+        // 2. Set Dynamic Theme Colors
+        const themeMap = {
+            "English": "#E91E63", "Political Science": "#E91E63",
+            "Biology": "#2E7D32", "Botany": "#2E7D32", "Geography": "#2E7D32",
+            "Chemistry": "#9C27B0",
+            "Math": "#1976D2", "Physics": "#1976D2", "Mental Ability": "#1976D2", "GK": "#1976D2",
+            "History": "#795548"
+        };
+        const color = themeMap[subject] || "#555";
+        document.documentElement.style.setProperty('--subject-color', color);
+
+        window.onload = async () => {
+            if (!activeBatchId) {
+                document.getElementById('loader').innerText = "Session expired. Please re-login.";
+                return;
+            }
+
+            document.getElementById('subjectTitle').firstChild.textContent = subject + " ";
+            document.getElementById('batchNameDisplay').innerText = activeBatchName;
+
+            try {
+                // Query chapters linked to the active batch and specific subject
+                const snapshot = await db.collection("content")
+                    .where("Id", "==", activeBatchId)
+                    .where("Subject", "==", subject)
+                    .get();
+
+                const listDiv = document.getElementById('chapterList');
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('listLabel').style.display = 'block';
+
+                if (snapshot.empty) {
+                    listDiv.innerHTML = `<p style="text-align:center; color:#999; margin-top:30px;">No chapters found for ${subject}.</p>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'chapter-card';
+                    card.innerHTML = `
+                        <div class="chapter-info">
+                            <p class="chapter-name">${data.Name}</p>
+                        </div>
+                        <div class="arrow">›</div>
+                    `;
+                    card.onclick = () => {
+                        // Pass Chapter ID to next page
+                        window.location.href = `content_view.html?chapterId=${doc.id}`;
+                    };
+                    listDiv.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loader').innerText = "Error loading chapters.";
+            }
+        };
+    </script>
+</body>
+</html>
