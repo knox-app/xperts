@@ -19,7 +19,7 @@
         .header {
             background: #fff;
             padding: 10px 22px 20px 22px;
-            border-bottom: 2.5px solid var(--theme-color); /* Thinner border */
+            border-bottom: 2.5px solid var(--theme-color); 
             border-bottom-left-radius: 35px;
             border-bottom-right-radius: 35px;
             position: relative;
@@ -49,14 +49,17 @@
         }
         
         .title-row { display: flex; align-items: center; position: relative; }
-        .subject-name { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -0.2px; }
+        
+        /* Adjusted font-weight to 700 for a cleaner look */
+        .subject-name { font-size: 30px; font-weight: 700; margin: 0; letter-spacing: -0.2px; color: #1a1a1a; }
         
         /* Star Icons */
         .stars { position: relative; margin-left: 8px; width: 34px; height: 34px; }
         .star-main { fill: #D4AF37; width: 22px; position: absolute; top: -2px; left: 0; }
         .star-small { fill: #D4AF37; width: 10px; position: absolute; top: 12px; left: 18px; opacity: 0.8; }
 
-        .class-text { font-size: 16px; color: #555; font-weight: 700; margin-top: 2px; }
+        /* Adjusted to font-weight 500 and lighter gray to match image */
+        .class-text { font-size: 17px; color: #666; font-weight: 500; margin-top: 2px; }
 
         /* --- CONTENT SECTION --- */
         .container { padding: 35px 20px; }
@@ -88,7 +91,7 @@
         .accordion-wrapper {
             display: grid;
             grid-template-rows: 0fr; 
-            transition: grid-template-rows 0.3s ease;
+            transition: grid-template-rows 0.35s ease;
         }
 
         .content-card.is-open .accordion-wrapper { grid-template-rows: 1fr; }
@@ -107,7 +110,6 @@
             transition: background 0.1s;
         }
 
-        /* Removed color change, added subtle background touch effect */
         .chapter-item:active { background: #fcfcfc; opacity: 0.8; }
 
         #loading-ui { text-align: center; padding: 30px; color: #999; font-size: 14px; }
@@ -122,13 +124,13 @@
         </div>
         
         <div class="title-row">
-            <h1 class="subject-name" id="subTitle">Biology</h1>
+            <h1 class="subject-name" id="subTitle">Subject</h1>
             <div class="stars">
                 <svg class="star-main" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
                 <svg class="star-small" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
             </div>
         </div>
-        <div class="class-text" id="classDisplay">Class 10</div>
+        <div class="class-text" id="classDisplay">Class ...</div>
     </div>
 
     <div class="container">
