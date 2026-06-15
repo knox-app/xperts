@@ -7,20 +7,20 @@
     <style>
         :root { --theme-color: #00C897; } /* Dynamic Green */
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            background-color: #F3F7FF; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #F4F7FE; 
             margin: 0; padding: 0; color: #1a1a1a;
         }
 
-        /* Header Section */
+        /* Header Section - Matches your image height */
         .header {
             background: #fff;
-            padding: 20px 25px 40px 25px;
-            border-bottom: 6px solid var(--theme-color);
-            border-bottom-left-radius: 40px;
-            border-bottom-right-radius: 40px;
+            padding: 15px 25px 25px 25px;
+            border-bottom: 5px solid var(--theme-color);
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
             position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             overflow: hidden;
         }
 
@@ -29,51 +29,51 @@
             content: '';
             position: absolute;
             top: 0; right: 0;
-            width: 120px; height: 120px;
+            width: 100px; height: 100px;
             background-image: 
-                linear-gradient(#E0E0E0 1px, transparent 1px),
-                linear-gradient(90deg, #E0E0E0 1px, transparent 1px);
+                linear-gradient(#E5E7EB 1px, transparent 1px),
+                linear-gradient(90deg, #E5E7EB 1px, transparent 1px);
             background-size: 15px 15px;
-            opacity: 0.4;
+            opacity: 0.5;
             pointer-events: none;
         }
 
-        .back-btn { cursor: pointer; margin-bottom: 20px; display: block; width: 24px; }
+        .back-btn { cursor: pointer; margin-bottom: 12px; display: inline-block; width: 24px; color: #444; }
         
         .title-row { display: flex; align-items: center; position: relative; }
-        .subject-name { font-size: 32px; font-weight: 800; margin: 0; }
+        .subject-name { font-size: 30px; font-weight: 800; margin: 0; line-height: 1.1; }
         
-        /* Star Icons */
-        .stars { position: relative; margin-left: 10px; width: 40px; height: 40px; }
-        .star-main { fill: #D4AF37; width: 24px; position: absolute; top: -5px; left: 0; }
-        .star-small { fill: #D4AF37; width: 12px; position: absolute; top: 12px; left: 18px; }
+        /* Star Icons (SVG) */
+        .stars { position: relative; margin-left: 10px; width: 35px; height: 35px; }
+        .star-main { fill: #D4AF37; width: 22px; position: absolute; top: -2px; left: 0; }
+        .star-small { fill: #D4AF37; width: 10px; position: absolute; top: 12px; left: 18px; }
 
-        .class-text { font-size: 18px; color: #666; font-weight: 600; margin-top: 5px; }
+        .class-text { font-size: 16px; color: #666; font-weight: 600; margin-top: 2px; }
 
-        .container { padding: 25px 18px; }
+        .container { padding: 30px 18px; }
 
         /* Collapsible Card */
         .content-card {
             background: #fff;
             border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
             overflow: hidden;
         }
 
         .accordion-header {
-            padding: 20px;
+            padding: 22px 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             cursor: pointer;
             user-select: none;
         }
-        .accordion-header h4 { margin: 0; font-size: 18px; font-weight: 700; }
-        .accordion-header p { margin: 4px 0 0; font-size: 13px; color: #888; }
+        .accordion-header h4 { margin: 0; font-size: 18px; font-weight: 700; color: #222; }
+        .accordion-header p { margin: 4px 0 0; font-size: 14px; color: #888; }
         
         .chevron { 
             transition: transform 0.3s ease; 
-            width: 20px; height: 20px; fill: #444; 
+            width: 24px; height: 24px; fill: #444; margin-top: -2px;
         }
         .active .chevron { transform: rotate(180deg); }
 
@@ -81,23 +81,24 @@
         .accordion-body {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-top: 0px solid #f0f0f0;
+            transition: max-height 0.4s ease-out;
         }
-        .active .accordion-body { max-height: 2000px; border-top: 1px solid #f0f0f0; }
+        .active .accordion-body { max-height: 2500px; padding-bottom: 15px; }
 
         .chapter-item {
             padding: 18px 20px;
-            border-bottom: 1px solid #f8f8f8;
-            font-size: 15px;
+            margin: 0 20px;
+            border-bottom: 1px solid #f2f2f2;
+            font-size: 16px;
             font-weight: 500;
             color: #444;
             cursor: pointer;
+            transition: color 0.2s;
         }
         .chapter-item:last-child { border-bottom: none; }
-        .chapter-item:hover { background: #fafafa; }
+        .chapter-item:active { color: var(--theme-color); }
 
-        #loader { text-align: center; padding: 20px; color: #888; font-size: 14px; }
+        #loader { text-align: center; padding: 20px; color: #888; font-size: 14px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -108,13 +109,13 @@
         </div>
         
         <div class="title-row">
-            <h1 class="subject-name" id="subTitle">Biology</h1>
+            <h1 class="subject-name" id="subTitle">Loading...</h1>
             <div class="stars">
                 <svg class="star-main" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
                 <svg class="star-small" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
             </div>
         </div>
-        <div class="class-text">Class 10</div>
+        <div class="class-text" id="classDisplay">Class ...</div>
     </div>
 
     <div class="container">
@@ -122,7 +123,7 @@
             <div class="accordion-header" onclick="toggleAccordion()">
                 <div>
                     <h4>All Chapters</h4>
-                    <p id="countLabel">Loading...</p>
+                    <p id="countLabel">Checking chapters...</p>
                 </div>
                 <svg class="chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
             </div>
@@ -142,7 +143,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. URL & Theme Config
+        // 1. Setup Theme and URL Params
         const params = new URLSearchParams(window.location.search);
         const subject = params.get('sub') || "Biology";
         
@@ -157,9 +158,21 @@
         document.documentElement.style.setProperty('--theme-color', colors[subject] || "#555");
         document.getElementById('subTitle').innerText = subject;
 
-        // 2. Fetch Logic
+        // 2. Load Class and Chapter Data
         window.onload = async () => {
             const batchId = localStorage.getItem("activeBatchId");
+            
+            if (batchId) {
+                try {
+                    // Fetch dynamic class name from the batch document
+                    const batchDoc = await db.collection("Batches").doc(batchId).get();
+                    if (batchDoc.exists) {
+                        const batchData = batchDoc.data();
+                        document.getElementById('classDisplay').innerText = `Class ${batchData.Class || "10"}`;
+                    }
+                } catch (e) { console.error("Error fetching class:", e); }
+            }
+
             try {
                 let query = db.collection("content").where("Subject", "==", subject);
                 if(batchId) query = query.where("Id", "==", batchId);
@@ -170,7 +183,7 @@
 
                 if(snap.empty) {
                     document.getElementById('countLabel').innerText = "0 chapters";
-                    list.innerHTML = "<p style='padding:20px; color:#888;'>No chapters found.</p>";
+                    list.innerHTML = "<p style='padding:20px; color:#999; text-align:center;'>No content available yet.</p>";
                     return;
                 }
 
@@ -179,14 +192,14 @@
                     const div = document.createElement('div');
                     div.className = 'chapter-item';
                     div.innerText = doc.data().Name;
-                    div.onclick = () => window.location.href = `view.html?id=${doc.id}`;
+                    div.onclick = () => window.location.href = `view.html?chapterId=${doc.id}`;
                     list.appendChild(div);
                 });
 
-                // Auto-open accordion once data is loaded
-                toggleAccordion();
+                // Auto-open list on load
+                document.getElementById('cardWrapper').classList.add('active');
 
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Error fetching chapters:", e); }
         };
 
         function toggleAccordion() {
