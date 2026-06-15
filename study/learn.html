@@ -3,56 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Chapters</title>
+    <title>Chapters List</title>
     <style>
-        :root { --subject-color: #555; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #F8F9FB; margin: 0; padding: 0; }
-        
-        /* Dynamic Header */
-        .header {
-            background-color: #FFFFFF;
-            padding: 30px 20px;
-            border-bottom: 8px solid var(--subject-color);
-            border-radius: 0 0 25px 25px;
+        :root { --theme-color: #d81b60; } /* Default English Pink */
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #e9f0f7; /* Light blue background like your screenshot */
+            margin: 0; padding: 0; color: #333;
+        }
+
+        /* Top White Section */
+        .top-nav {
+            background: #fff;
+            padding: 40px 20px 25px 25px;
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            position: relative;
         }
-        .header h1 { font-size: 26px; margin: 0; color: #111; display: flex; align-items: center; }
-        .header h1 span { font-size: 18px; margin-left: 10px; opacity: 0.6; }
-        .header p { font-size: 15px; margin: 8px 0 0; color: #666; font-weight: 500; }
+        .subject-title { font-size: 28px; font-weight: 800; margin: 0; color: #1a1a1a; display: flex; align-items: center; }
+        .sparkle { color: #f9a825; margin-left: 8px; font-size: 24px; }
+        .class-label { font-size: 15px; color: #666; margin-top: 2px; font-weight: 500; }
 
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .container { padding: 25px 15px; }
 
-        .section-label { 
-            font-size: 12px; font-weight: bold; color: var(--subject-color); 
-            margin: 20px 0 12px 5px; text-transform: uppercase; letter-spacing: 1px;
+        /* The Main White Card */
+        .content-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
-        #loader { text-align: center; margin-top: 50px; color: #888; font-weight: 500; }
-
-        .chapter-card {
-            background: #fff; border-radius: 16px; padding: 18px;
-            margin-bottom: 12px; display: flex; align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer;
-            border: 1px solid #f0f0f0; transition: 0.2s;
+        /* All Chapters Header */
+        .chapters-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
         }
-        .chapter-card:active { transform: scale(0.98); background: #fafafa; }
-        .chapter-info { flex-grow: 1; }
-        .chapter-name { font-size: 16px; font-weight: 600; color: #333; margin: 0; }
-        .arrow { color: var(--subject-color); font-size: 20px; font-weight: bold; }
+        .chapters-header div h4 { margin: 0; font-size: 17px; font-weight: 700; color: #222; }
+        .chapters-header div p { margin: 3px 0 0; font-size: 13px; color: #888; }
+        .chevron { font-size: 20px; color: #444; font-weight: bold; transform: rotate(180deg); }
+
+        /* Chapter List Items */
+        .chapter-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f2f2f2;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: block;
+            text-decoration: none;
+            color: #444;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .chapter-item:last-child { border-bottom: none; }
+        .chapter-item:active { background-color: #f9f9f9; }
+
+        #loader { text-align: center; padding: 40px; color: #666; font-weight: 500; }
+        
+        /* Dynamic Subject Borders */
+        .top-nav { border-bottom: 6px solid var(--theme-color); }
     </style>
 </head>
 <body>
 
-    <div class="header" id="mainHeader">
-        <h1 id="subjectTitle">Loading... <span id="classTag">Class 10</span></h1>
-        <p id="batchNameDisplay">Course Name</p>
+    <div class="top-nav">
+        <h1 class="subject-title" id="subName">English <span class="sparkle">✦</span></h1>
+        <div class="class-label">Class 10</div>
     </div>
 
     <div class="container">
-        <div id="loader">Fetching your chapters...</div>
-        <div class="section-label" id="listLabel" style="display:none;">All Chapters</div>
-        <div id="chapterList"></div>
+        <div class="content-card">
+            <div class="chapters-header">
+                <div>
+                    <h4>All Chapters</h4>
+                    <p id="chapCount">Loading chapters...</p>
+                </div>
+                <div class="chevron">^</div>
+            </div>
+
+            <div id="loader">Fetching data...</div>
+            <div id="chapterList"></div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -63,69 +97,63 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. Get Session Data
-        const activeBatchId = localStorage.getItem("activeBatchId");
-        const activeBatchName = localStorage.getItem("activeBatchName");
-        
+        // 1. Logic to get Subject from URL and Color mapping
         const urlParams = new URLSearchParams(window.location.search);
         const subject = urlParams.get('sub') || "English";
-
-        // 2. Set Dynamic Theme Colors
-        const themeMap = {
-            "English": "#E91E63", "Political Science": "#E91E63",
+        
+        const colors = {
+            "English": "#d81b60", "Political Science": "#d81b60",
             "Biology": "#2E7D32", "Botany": "#2E7D32", "Geography": "#2E7D32",
-            "Chemistry": "#9C27B0",
+            "Chemistry": "#7B1FA2",
             "Math": "#1976D2", "Physics": "#1976D2", "Mental Ability": "#1976D2", "GK": "#1976D2",
-            "History": "#795548"
+            "History": "#5D4037"
         };
-        const color = themeMap[subject] || "#555";
-        document.documentElement.style.setProperty('--subject-color', color);
+        document.documentElement.style.setProperty('--theme-color', colors[subject] || "#555");
+        document.getElementById('subName').firstChild.textContent = subject + " ";
 
+        // 2. Fetch Data
         window.onload = async () => {
+            const activeBatchId = localStorage.getItem("activeBatchId");
+            
+            // Fix: If for some reason localStorage is empty, we alert but try to load anyway if subject exists
             if (!activeBatchId) {
-                document.getElementById('loader').innerText = "Session expired. Please re-login.";
-                return;
+                console.warn("activeBatchId not found in localStorage. Checking all content for subject.");
             }
 
-            document.getElementById('subjectTitle').firstChild.textContent = subject + " ";
-            document.getElementById('batchNameDisplay').innerText = activeBatchName;
-
             try {
-                // Query chapters linked to the active batch and specific subject
-                const snapshot = await db.collection("content")
-                    .where("Id", "==", activeBatchId)
-                    .where("Subject", "==", subject)
-                    .get();
+                let query = db.collection("content").where("Subject", "==", subject);
+                
+                // If we have a batch ID, we filter strictly for that batch
+                if(activeBatchId) {
+                    query = query.where("Id", "==", activeBatchId);
+                }
 
+                const snapshot = await query.get();
                 const listDiv = document.getElementById('chapterList');
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('listLabel').style.display = 'block';
 
                 if (snapshot.empty) {
-                    listDiv.innerHTML = `<p style="text-align:center; color:#999; margin-top:30px;">No chapters found for ${subject}.</p>`;
+                    document.getElementById('chapCount').innerText = "0 chapters";
+                    listDiv.innerHTML = "<p style='padding:20px; color:grey;'>No chapters found for this selection.</p>";
                     return;
                 }
 
+                document.getElementById('chapCount').innerText = `${snapshot.size} chapters`;
+
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'chapter-card';
-                    card.innerHTML = `
-                        <div class="chapter-info">
-                            <p class="chapter-name">${data.Name}</p>
-                        </div>
-                        <div class="arrow">›</div>
-                    `;
-                    card.onclick = () => {
-                        // Pass Chapter ID to next page
-                        window.location.href = `content_view.html?chapterId=${doc.id}`;
+                    const item = document.createElement('div');
+                    item.className = 'chapter-item';
+                    item.innerText = data.Name;
+                    item.onclick = () => {
+                        window.location.href = `view.html?id=${doc.id}`;
                     };
-                    listDiv.appendChild(card);
+                    listDiv.appendChild(item);
                 });
 
-            } catch (error) {
-                console.error(error);
-                document.getElementById('loader').innerText = "Error loading chapters.";
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loader').innerText = "Failed to load data. Please check internet.";
             }
         };
     </script>
