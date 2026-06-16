@@ -5,110 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chapters List</title>
     <style>
-        :root { --theme-color: #00C897; --blue: #0066FF; } 
+        :root { --theme-color: #00C897; } 
+        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: #F1F5F9; margin: 0; padding: 0; }
 
-        /* --- ERROR SCREEN (MATCHES SCREENSHOT) --- */
-        #error-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #F4F7FE; z-index: 1000; display: none;
-            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #F1F5F9; 
+            margin: 0; padding: 0; color: #1a1a1a;
         }
-        #error-screen .power-icon { position: absolute; top: 30px; right: 30px; cursor: pointer; opacity: 0.6; }
-        #error-screen img { width: 80%; max-width: 300px; margin-bottom: 40px; }
-        #error-screen h2 { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 40px; }
-        #error-screen .btn { 
-            width: 70%; max-width: 280px; padding: 16px; border-radius: 50px; 
-            font-size: 16px; font-weight: 700; cursor: pointer; border: none; margin-bottom: 15px;
-            text-align: center; text-decoration: none; display: block;
-        }
-        #error-screen .btn-outline { background: transparent; border: 2.5px solid var(--blue); color: #1a1a1a; }
-        #error-screen .btn-solid { background: var(--blue); color: white; box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3); }
 
-        /* --- HEADER --- */
+        /* --- HEADER SECTION --- */
         .header {
-            background: #fff; padding: 10px 22px 20px 22px;
-            border-bottom: 2.5px solid var(--theme-color); border-bottom-left-radius: 35px; border-bottom-right-radius: 35px;
-            position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            background: #fff;
+            padding: 12px 22px 24px 22px;
+            border-bottom: 2.5px solid var(--theme-color); 
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            z-index: 10;
         }
+
+        /* Precise Graph Grid Pattern */
         .grid-bg {
-            position: absolute; top: 0; right: 0; width: 100px; height: 100px;
-            background-image: linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
-            background-size: 15px 15px; pointer-events: none;
+            position: absolute;
+            top: 0; right: 0;
+            width: 100px; height: 100px;
+            background-image: 
+                linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
+            background-size: 15px 15px;
+            mask-image: linear-gradient(to left, black, transparent), linear-gradient(to bottom, black, transparent);
+            -webkit-mask-image: linear-gradient(to left, black, transparent), linear-gradient(to bottom, black, transparent);
+            pointer-events: none;
         }
-        .back-btn { cursor: pointer; margin-bottom: 12px; display: inline-flex; color: #333; }
-        .subject-name { font-size: 25px; font-weight: 700; margin: 0; color: #1a1a1a; }
-        .stars { position: relative; margin-left: 8px; width: 30px; height: 30px; display: inline-block; vertical-align: middle; }
+
+        .back-btn { 
+            cursor: pointer; 
+            margin-bottom: 15px; 
+            display: inline-flex; 
+            color: #333;
+        }
+        
+        .title-row { display: flex; align-items: center; position: relative; }
+        .subject-name { font-size: 25px; font-weight: 700; margin: 0; letter-spacing: -0.2px; color: #1a1a1a; line-height: 1.2; }
+        
+        /* Star Icons */
+        .stars { position: relative; margin-left: 8px; width: 30px; height: 30px; }
         .star-main { fill: #D4AF37; width: 20px; position: absolute; top: 0; left: 0; }
         .star-small { fill: #D4AF37; width: 9px; position: absolute; top: 12px; left: 16px; opacity: 0.8; }
+
         .class-text { font-size: 14.5px; color: #666; font-weight: 500; margin-top: 2px; }
 
-        /* --- CONTENT --- */
+        /* --- CONTENT SECTION --- */
         .container { padding: 35px 20px; }
-        .content-card { background: #fff; border-radius: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; }
-        .accordion-trigger { padding: 22px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+
+        .content-card {
+            background: #fff;
+            border-radius: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .accordion-trigger {
+            padding: 22px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
         .accordion-trigger h4 { margin: 0; font-size: 18px; font-weight: 700; color: #222; }
         .accordion-trigger p { margin: 3px 0 0; font-size: 14px; color: #777; font-weight: 500; }
-        .chevron { transition: transform 0.35s ease; width: 24px; height: 24px; fill: #444; }
-        .accordion-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.35s ease; }
+        
+        .chevron { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 24px; height: 24px; fill: #444; }
+
+        /* Butter Smooth Expansion Logic */
+        .accordion-wrapper {
+            display: grid;
+            grid-template-rows: 0fr; 
+            transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .content-card.is-open .accordion-wrapper { grid-template-rows: 1fr; }
         .content-card.is-open .chevron { transform: rotate(180deg); }
         .accordion-inner { overflow: hidden; }
+
         .list-container { padding: 0 20px 10px 20px; }
-        .chapter-item { padding: 20px 0; border-top: 1.2px solid #F3F3F3; font-size: 16px; font-weight: 500; color: #444; cursor: pointer; }
-        .chapter-item:active { background: #fcfcfc; }
+
+        .chapter-item {
+            padding: 20px 0;
+            border-top: 1.2px solid #F3F3F3;
+            font-size: 16px;
+            font-weight: 500;
+            color: #444;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .chapter-item:active { background: #fcfcfc; opacity: 0.8; }
+
+        #loading-ui { text-align: center; padding: 30px; color: #999; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- ERROR SCREEN -->
-    <div id="error-screen">
-        <div class="power-icon" onclick="location.reload()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+    <div class="header">
+        <div class="grid-bg"></div>
+        <div class="back-btn" onclick="window.history.back()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </div>
-        <img src="https://i.ibb.co/whSMNK7c/IMG-20260616-080043.jpg" alt="Error Illustration">
-        <h2>Something went wrong</h2>
-        <a href="index.html" class="btn btn-outline">Go to home</a>
-        <button onclick="location.reload()" class="btn btn-solid">Try again</button>
+        
+        <div class="title-row">
+            <h1 class="subject-name" id="subTitle">Loading...</h1>
+            <div class="stars">
+                <svg class="star-main" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+                <svg class="star-small" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+            </div>
+        </div>
+        <div class="class-text" id="classDisplay">Class ...</div>
     </div>
 
-    <!-- MAIN UI -->
-    <div id="main-content">
-        <div class="header">
-            <div class="grid-bg"></div>
-            <div class="back-btn" onclick="window.history.back()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    <div class="container">
+        <div class="content-card is-open" id="chapterAccordion">
+            <div class="accordion-trigger" onclick="toggleAccordion()">
+                <div>
+                    <h4>All Chapters</h4>
+                    <p id="countLabel">Loading chapters...</p>
+                </div>
+                <svg class="chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
             </div>
             
-            <div class="title-row">
-                <h1 class="subject-name" id="subTitle">...</h1>
-                <div class="stars">
-                    <svg class="star-main" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
-                    <svg class="star-small" viewBox="0 0 24 24"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
-                </div>
-            </div>
-            <div class="class-text" id="classDisplay">Class ...</div>
-        </div>
-
-        <div class="container">
-            <div class="content-card is-open" id="chapterAccordion">
-                <div class="accordion-header accordion-trigger" onclick="toggleAccordion()">
-                    <div>
-                        <h4>All Chapters</h4>
-                        <p id="countLabel">Loading...</p>
-                    </div>
-                    <svg class="chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-                </div>
-                <div class="accordion-wrapper">
-                    <div class="accordion-inner">
-                        <div class="list-container" id="chapterList"></div>
-                    </div>
+            <div class="accordion-wrapper">
+                <div class="accordion-inner">
+                    <div id="loading-ui">Fetching contents...</div>
+                    <div class="list-container" id="chapterList"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
@@ -117,56 +154,67 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // 1. UI Subject Mapping
         const params = new URLSearchParams(window.location.search);
         const subject = params.get('sub') || "Biology";
-        const batchId = localStorage.getItem("activeBatchId");
+        
+        const colors = {
+            "English": "#D81B60", "Political Science": "#D81B60",
+            "Biology": "#00C897", "Botany": "#00C897", "Geography": "#00C897",
+            "Chemistry": "#9C27B0",
+            "Math": "#0066FF", "Physics": "#0066FF", "Mental Ability": "#0066FF", "GK": "#0066FF",
+            "History": "#795548"
+        };
 
-        function showError() {
-            document.getElementById('main-content').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'flex';
-        }
+        document.documentElement.style.setProperty('--theme-color', colors[subject] || "#555");
+        document.getElementById('subTitle').innerText = subject;
 
+        // 2. Load Data and Reorder based on Database sequence
         window.onload = async () => {
-            // Check if logged in with course
-            if (!batchId) { showError(); return; }
-
-            const colors = {"Biology": "#00C897", "Math": "#0066FF", "English": "#D81B60"};
-            document.documentElement.style.setProperty('--theme-color', colors[subject] || "#555");
-            document.getElementById('subTitle').innerText = subject;
+            const batchId = localStorage.getItem("activeBatchId");
+            
+            if (batchId) {
+                db.collection("Batches").doc(batchId).get().then(doc => {
+                    if (doc.exists) document.getElementById('classDisplay').innerText = `Class ${doc.data().Class || "10"}`;
+                });
+            }
 
             try {
-                // Get Class Info
-                const batchDoc = await db.collection("Batches").doc(batchId).get();
-                if (batchDoc.exists) document.getElementById('classDisplay').innerText = `Class ${batchDoc.data().Class || "10"}`;
-
-                // Fetch Content Sorted by 'Index' (Admin can drag-drop to set this index)
+                // Fetch chapters for the specific subject and batch
                 const snap = await db.collection("content")
-                    .where("Id", "==", batchId)
                     .where("Subject", "==", subject)
-                    .orderBy("Index", "asc")
+                    .where("Id", "==", batchId)
                     .get();
 
-                if (snap.empty) {
+                const container = document.getElementById('chapterList');
+                document.getElementById('loading-ui').style.display = 'none';
+
+                if(snap.empty) {
                     document.getElementById('countLabel').innerText = "0 chapters";
+                    container.innerHTML = "<p style='text-align:center; padding:20px; color:#999;'>No content found.</p>";
                     return;
                 }
 
-                document.getElementById('countLabel').innerText = `${snap.size} chapters`;
-                const container = document.getElementById('chapterList');
-                snap.forEach(doc => {
+                // Sorting data locally based on the 'order' field provided by admin in 2.html
+                let chapters = [];
+                snap.forEach(doc => { chapters.push({ id: doc.id, ...doc.data() }); });
+                chapters.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                document.getElementById('countLabel').innerText = `${chapters.length} chapters`;
+                
+                chapters.forEach(chap => {
                     const item = document.createElement('div');
                     item.className = 'chapter-item';
-                    item.innerText = doc.data().Name;
-                    item.onclick = () => window.location.href = `view.html?id=${doc.id}`;
+                    item.innerText = chap.Name;
+                    item.onclick = () => window.location.href = `view.html?chapterId=${chap.id}`;
                     container.appendChild(item);
                 });
-            } catch (err) {
-                console.error(err);
-                showError();
-            }
+            } catch (err) { console.error("Error loading chapters:", err); }
         };
 
-        function toggleAccordion() { document.getElementById('chapterAccordion').classList.toggle('is-open'); }
+        function toggleAccordion() {
+            document.getElementById('chapterAccordion').classList.toggle('is-open');
+        }
     </script>
 </body>
 </html>
