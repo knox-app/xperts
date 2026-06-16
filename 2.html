@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Reorder Chapters</title>
+    <!-- SortableJS for Smooth Drag and Drop -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f4f7fa; margin: 0; padding: 20px; }
+        .card { background: #fff; max-width: 480px; margin: 0 auto; padding: 30px; border-radius: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.06); }
+        .hidden { display: none; }
+        h2 { margin: 0 0 15px 0; color: #111; font-size: 22px; }
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 14px; color: #555; }
+        
+        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: 0.2s; }
+        input:focus, select:focus { border-color: #0066FF; outline: none; }
+        
+        button { background: #0066FF; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.98); }
+        
+        /* Draggable List Styling */
+        #chapterList { margin-top: 20px; }
+        .drag-item { 
+            background: #fff; padding: 16px; margin-bottom: 10px; border: 1px solid #eee;
+            border-radius: 12px; display: flex; align-items: center; cursor: grab;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .drag-item:active { cursor: grabbing; border-color: #0066FF; }
+        .handle { margin-right: 15px; color: #bbb; font-size: 20px; user-select: none; }
+        .chapter-name { flex-grow: 1; font-weight: 500; color: #333; }
+        
+        /* Drag effect class */
+        .ghost { opacity: 0.3; background: #f0f4ff; border: 2px dashed #0066FF; }
+        
+        #saveBtn { background: #00C897; margin-top: 25px; display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Step 1: Login via ID only -->
+    <div id="loginBox" class="card">
+        <h2>Institute Management</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Enter your Institution ID to manage chapters.</p>
+        <input type="text" id="instId" placeholder="Institution ID (e.g. INSPIREJWR3247)">
+        <button onclick="login()">Access Dashboard</button>
+    </div>
+
+    <!-- Step 2: Management Panel -->
+    <div id="adminBox" class="card hidden">
+        <h2 id="instTitle">Loading...</h2>
+        
+        <label>1. Select Active Batch</label>
+        <select id="batchSelect" onchange="loadChapters()"></select>
+
+        <label>2. Select Subject</label>
+        <select id="subSelect" onchange="loadChapters()">
+            <option value="Biology">Biology</option>
+            <option value="Botany">Botany</option>
+            <option value="English">English</option>
+            <option value="Physics">Physics</option>
+            <option value="Math">Math</option>
+            <option value="Chemistry">Chemistry</option>
+        </select>
+
+        <hr style="margin: 25px 0; border: 0.5px solid #eee;">
+        
+        <p style="font-size: 13px; color: #888; text-align: center; margin-bottom: 15px;">Drag to reorder the sequence</p>
+        <div id="chapterList"></div>
+        
+        <button id="saveBtn" onclick="saveNewOrder()">Save Changes</button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
+
+    <script>
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let instId = "";
+
+        async function login() {
+            const id = document.getElementById('instId').value.trim();
+            if(!id) return alert("Please enter an Institution ID");
+
+            try {
+                // Check if Institute exists in database
+                const doc = await db.collection("Institutes").doc(id).get();
+                
+                if(doc.exists) {
+                    instId = id;
+                    document.getElementById('instTitle').innerText = doc.data()["Full Name"] || "Institute Dashboard";
+                    document.getElementById('loginBox').classList.add('hidden');
+                    document.getElementById('adminBox').classList.remove('hidden');
+                    fetchBatches();
+                } else {
+                    alert("Invalid Institution ID. Please check and try again.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to database.");
+            }
+        }
+
+        async function fetchBatches() {
+            const snap = await db.collection("Batches").where("Institution", "==", instId).get();
+            const select = document.getElementById('batchSelect');
+            select.innerHTML = ""; // Clear existing
+
+            if(snap.empty) {
+                alert("No batches found for this Institute.");
+                return;
+            }
+
+            snap.forEach(doc => {
+                let opt = document.createElement('option');
+                opt.value = doc.id; 
+                opt.innerText = doc.data()["Batch Name"];
+                select.appendChild(opt);
+            });
+            loadChapters();
+        }
+
+        async function loadChapters() {
+            const batch = document.getElementById('batchSelect').value;
+            const sub = document.getElementById('subSelect').value;
+            const list = document.getElementById('chapterList');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            list.innerHTML = "<p style='text-align:center; color: #999;'>Fetching chapters...</p>";
+            saveBtn.style.display = "none";
+
+            // Fetch chapters for the selected batch and subject
+            const snap = await db.collection("content")
+                .where("Id", "==", batch)
+                .where("Subject", "==", sub)
+                .get();
+
+            let chapters = [];
+            snap.forEach(doc => chapters.push({ id: doc.id, ...doc.data() }));
+            
+            // Sort by 'order' field (defaulting to 0 if not set)
+            chapters.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            list.innerHTML = "";
+            if(chapters.length === 0) {
+                list.innerHTML = "<p style='text-align:center; color:#888;'>No chapters found for this subject.</p>";
+                return;
+            }
+
+            saveBtn.style.display = "block";
+            chapters.forEach(chap => {
+                const div = document.createElement('div');
+                div.className = "drag-item";
+                div.setAttribute('data-id', chap.id);
+                div.innerHTML = `
+                    <div class="handle">☰</div>
+                    <div class="chapter-name">${chap.Name}</div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Initialize Draggable Sorting Logic
+            new Sortable(list, {
+                animation: 200,
+                ghostClass: 'ghost',
+                handle: '.handle',
+                forceFallback: true // Better touch support for mobile
+            });
+        }
+
+        async function saveNewOrder() {
+            const listItems = document.querySelectorAll('.drag-item');
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Syncing...";
+            btn.disabled = true;
+
+            const batchWrite = db.batch();
+            listItems.forEach((item, index) => {
+                const docId = item.getAttribute('data-id');
+                const docRef = db.collection("content").doc(docId);
+                // Update 'order' field based on position in DOM
+                batchWrite.update(docRef, { order: index });
+            });
+
+            try {
+                await batchWrite.commit();
+                btn.innerText = "Order Updated!";
+                btn.style.background = "#28a745";
+                setTimeout(() => {
+                    btn.innerText = "Save Changes";
+                    btn.style.background = "#00C897";
+                    btn.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                btn.innerText = "Error!";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
