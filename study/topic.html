@@ -3,198 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chapter View</title>
+    <title>Chapter Details</title>
     <style>
-        :root {
-            --theme-color: #0066FF;
-            --bg-gray: #F8FAFC;
-        }
-
+        :root { --theme-color: #0066FF; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #FFFFFF;
-            margin: 0; padding: 0; color: #1a1a1a;
-            padding-bottom: 100px; /* Space for bottom toggle */
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; background-color: #fff; color: #1a1a1a; 
+            padding-bottom: 80px;
         }
 
-        /* --- HEADER --- */
+        /* --- Header Section --- */
         .header {
             padding: 20px;
-            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 100%), url('https://www.transparenttextures.com/patterns/cubes.png');
-            background-color: #f0f7ff;
+            background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%);
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .back-btn { cursor: pointer; padding: 5px; }
-        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { cursor: pointer; font-size: 24px; }
         .ask-doubt {
-            background: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
+            background: #fff; padding: 8px 16px; border-radius: 20px;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .chapter-title { font-size: 26px; font-weight: 800; margin: 0; color: #1a1a1a; }
-        .chapter-meta { font-size: 14px; color: #666; margin-top: 5px; font-weight: 500; }
+        .chapter-title { font-size: 24px; font-weight: 800; margin: 0; color: #111; }
+        .chapter-meta { font-size: 14px; color: #666; margin-top: 4px; }
 
-        /* --- CONTENT SECTIONS --- */
-        .section-container { padding: 25px 20px; }
-        .section-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #222; position: relative; }
-        .section-header::after {
-            content: ''; position: absolute; bottom: -5px; left: 0;
-            width: 40px; height: 3px; background: #FFD700; border-radius: 2px;
+        /* --- Video List --- */
+        .container { padding: 20px; }
+        .section-title { 
+            font-size: 19px; font-weight: 700; margin: 25px 0 15px 0; 
+            position: relative; display: inline-block;
+        }
+        .section-title::after {
+            content: ''; position: absolute; bottom: -4px; left: 0;
+            width: 35px; height: 3px; background: #FFD700; border-radius: 2px;
         }
 
-        /* --- VIDEO LIST --- */
         .video-item {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            align-items: center;
-            cursor: pointer;
+            display: flex; gap: 15px; margin-bottom: 20px; align-items: center;
+        }
+        .thumb-box {
+            position: relative; width: 120px; height: 75px; flex-shrink: 0;
+        }
+        .thumb-box img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
+        .duration {
+            position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7);
+            color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 4px;
+        }
+        .video-info { flex-grow: 1; font-size: 15px; font-weight: 600; line-height: 1.3; }
+        .dl-icon { color: #555; padding: 5px; }
+
+        /* --- Toggle Button --- */
+        .view-toggle {
+            background: #EBF2FF; color: #0066FF; padding: 10px 20px;
+            border-radius: 25px; width: fit-content; margin: 10px auto;
+            font-weight: 600; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
         }
 
-        .thumb-container {
-            position: relative;
-            width: 120px;
-            height: 75px;
-            flex-shrink: 0;
-        }
-
-        .thumb-container img {
-            width: 100%; height: 100%;
-            border-radius: 12px;
-            object-fit: cover;
-        }
-
-        .duration-tag {
-            position: absolute; bottom: 5px; left: 5px;
-            background: rgba(0,0,0,0.7);
-            color: #fff; font-size: 10px;
-            padding: 2px 6px; border-radius: 4px;
-        }
-
-        .video-info { flex-grow: 1; }
-        .video-title { font-size: 15px; font-weight: 600; line-height: 1.3; color: #333; margin-bottom: 4px; }
-        
-        .download-icon { color: #666; padding: 5px; }
-
-        /* --- VIEW ALL TOGGLE --- */
-        .view-toggle-btn {
-            display: flex; align-items: center; justify-content: center;
-            gap: 8px; margin: 10px auto;
-            background: #EBF2FF; color: #0066FF;
-            padding: 8px 20px; border-radius: 20px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            width: fit-content;
-        }
-
-        /* --- STUDY MODULES --- */
+        /* --- Study Modules --- */
         .module-card {
-            background: #fff;
-            border: 1px solid #F1F5F9;
-            border-radius: 18px;
-            padding: 18px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            border: 1px solid #eee; border-radius: 20px; padding: 16px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 12px;
         }
-
-        .module-icon {
-            width: 45px; height: 45px;
-            background: #F8FAFC;
-            border-radius: 50%;
+        .icon-circle {
+            width: 44px; height: 44px; background: #f8f9fa; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
         }
+        .module-text { flex-grow: 1; font-weight: 600; font-size: 15px; }
 
-        .module-title { flex-grow: 1; font-size: 15px; font-weight: 600; color: #333; }
-        .module-actions { display: flex; align-items: center; gap: 15px; color: #999; }
-
-        /* --- BOTTOM NAV --- */
+        /* --- Bottom Switcher --- */
         .bottom-nav {
-            position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%);
-            background: #fff;
-            padding: 6px;
-            border-radius: 40px;
-            display: flex;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            z-index: 100;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #fff; border-radius: 40px; display: flex; padding: 5px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100;
         }
-
-        .nav-btn {
-            padding: 12px 35px;
-            border-radius: 35px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
+        .nav-pill {
+            padding: 12px 35px; border-radius: 35px; font-weight: 600; cursor: pointer;
         }
+        .nav-pill.active { background: #1a1a1a; color: #fff; }
+        .nav-pill.inactive { color: #999; }
 
-        .nav-btn.active { background: #1a1a1a; color: #fff; }
-        .nav-btn.inactive { color: #999; }
-
-        /* Helpers */
+        #loader { text-align: center; padding: 50px; color: #666; }
         .hidden { display: none; }
-        .rotate { transform: rotate(180deg); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="top-nav">
-            <div class="back-btn" onclick="window.history.back()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    <div id="loader">Loading content...</div>
+
+    <div id="main-content" class="hidden">
+        <div class="header">
+            <div class="top-bar">
+                <div class="back-btn" onclick="window.history.back()">←</div>
+                <div class="ask-doubt"><span>😊</span> Ask a doubt</div>
             </div>
-            <div class="ask-doubt">
-                <span>😊</span> Ask a doubt
+            <h1 class="chapter-title" id="displayChapterName">Chapter Title</h1>
+            <div class="chapter-meta" id="displayMeta">Class 0 • Subject</div>
+        </div>
+
+        <div class="container">
+            <div class="section-title">Concept Videos</div>
+            <div id="videoList"></div>
+            
+            <div id="viewToggleBtn" class="view-toggle hidden" onclick="toggleVideoView()">
+                <span id="toggleText">View all</span> ▾
             </div>
-        </div>
-        <h1 class="chapter-title" id="chapterName">Loading...</h1>
-        <div class="chapter-meta" id="chapterMeta">Class ... • Subject</div>
-    </div>
 
-    <!-- Concept Videos Section -->
-    <div class="section-container">
-        <div class="section-header">Concept Videos</div>
-        <div id="videoList">
-            <!-- Videos will be injected here -->
-        </div>
-        <div id="viewAllBtn" class="view-toggle-btn hidden" onclick="toggleVideos()">
-            <span id="toggleText">View all</span>
-            <svg id="toggleIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <div class="section-title">Study Modules</div>
+            <div id="modulesList"></div>
         </div>
     </div>
 
-    <!-- Study Modules Section -->
-    <div class="section-container" style="background-color: #fcfcfc;">
-        <div class="section-header">Study Modules</div>
-        <div id="modulesList">
-            <!-- Modules will be injected here -->
-        </div>
-    </div>
-
-    <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <div class="nav-btn active">Learn</div>
-        <div class="nav-btn inactive" onclick="alert('Practice section coming soon!')">Practice</div>
+        <div class="nav-pill active">Learn</div>
+        <div class="nav-pill inactive">Practice</div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://knox-app.github.io/cloud/keys/xprtfb.js"></script>
@@ -203,119 +133,110 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const params = new URLSearchParams(window.location.search);
-        const chapterId = params.get('chapterId');
-        
+        const urlParams = new URLSearchParams(window.location.search);
+        // Replace underscores with spaces for cleaner matching
+        const chapterNameParam = (urlParams.get('chapter') || "").replace(/_/g, ' ');
+        const batchId = localStorage.getItem("activeBatchId");
+
         let allVideos = [];
-        let showingAll = false;
+        let isShowingAll = false;
 
         window.onload = async () => {
-            if (!chapterId) {
-                document.getElementById('chapterName').innerText = "Chapter not found";
+            if (!chapterNameParam || !batchId) {
+                document.getElementById('loader').innerText = "Missing Chapter or Batch information.";
                 return;
             }
 
             try {
-                // 1. Fetch Chapter Content
-                const doc = await db.collection("content").doc(chapterId).get();
-                if (!doc.exists) return;
+                // 1. Find the specific chapter content for this batch
+                const snap = await db.collection("content")
+                    .where("Id", "==", batchId)
+                    .where("Name", "==", chapterNameParam)
+                    .limit(1)
+                    .get();
 
-                const data = doc.data();
-                document.getElementById('chapterName').innerText = data.Name;
-                
-                // 2. Fetch Batch/Class Info
-                if (data.Id) {
-                    const batchDoc = await db.collection("Batches").doc(data.Id).get();
-                    if (batchDoc.exists) {
-                        document.getElementById('chapterMeta').innerText = `Class ${batchDoc.data().Class} • ${data.Subject}`;
-                    }
+                if (snap.empty) {
+                    document.getElementById('loader').innerText = "Content not found.";
+                    return;
                 }
 
-                // 3. Render Study Modules
+                const data = snap.docs[0].data();
+                document.getElementById('displayChapterName').innerText = data.Name;
+                
+                // 2. Get Class Info from Batches collection
+                const batchDoc = await db.collection("Batches").doc(batchId).get();
+                const className = batchDoc.exists ? batchDoc.data().Class : "N/A";
+                document.getElementById('displayMeta').innerText = `Class ${className} • ${data.Subject}`;
+
+                // 3. Load Modules
                 renderModules(data['Study Modules']);
 
-                // 4. Fetch Videos from "Lectures" collection
+                // 4. Load Videos
                 if (data.Videos && data.Videos.length > 0) {
-                    fetchLectures(data.Videos, data.Thumbnail);
+                    await fetchVideoDetails(data.Videos, data.Thumbnail);
                 }
 
-            } catch (err) {
-                console.error(err);
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loader').innerText = "Error loading content.";
             }
         };
 
-        async function fetchLectures(videoIds, fallbackThumb) {
-            const videoContainer = document.getElementById('videoList');
-            
-            // Note: In production, use where(FieldPath.documentId(), 'in', videoIds) 
-            // for efficiency if videoIds.length <= 10
-            for (const vidId of videoIds) {
-                const vDoc = await db.collection("Lectures").doc(vidId).get();
+        async function fetchVideoDetails(videoIds, fallbackThumb) {
+            for (const id of videoIds) {
+                const vDoc = await db.collection("Lectures").doc(id).get();
                 if (vDoc.exists) {
-                    allVideos.push({ id: vDoc.id, ...vDoc.data(), fallbackThumb });
+                    allVideos.push({ ...vDoc.data(), fallbackThumb });
                 }
             }
-
             renderVideos();
-            if (allVideos.length > 3) {
-                document.getElementById('viewAllBtn').classList.remove('hidden');
-            }
+            if (allVideos.length > 3) document.getElementById('viewToggleBtn').classList.remove('hidden');
         }
 
         function renderVideos() {
-            const container = document.getElementById('videoList');
-            container.innerHTML = '';
-            
-            const limit = showingAll ? allVideos.length : 3;
-            
-            allVideos.slice(0, limit).forEach(vid => {
-                const div = document.createElement('div');
-                div.className = 'video-item';
-                div.onclick = () => window.location.href = `player.html?v=${vid.id}`;
-                div.innerHTML = `
-                    <div class="thumb-container">
-                        <img src="${vid.Thumbnail || vid.fallbackThumb || 'https://via.placeholder.com/150'}" alt="thumb">
-                        <div class="duration-tag">${vid.Duration || '10:00'}</div>
+            const list = document.getElementById('videoList');
+            list.innerHTML = '';
+            const limit = isShowingAll ? allVideos.length : 3;
+
+            allVideos.slice(0, limit).forEach(v => {
+                const item = document.createElement('div');
+                item.className = 'video-item';
+                item.innerHTML = `
+                    <div class="thumb-box">
+                        <img src="${v.Thumbnail || v.fallbackThumb}" alt="thumb">
+                        <div class="duration">${v.Duration || '00:00'}</div>
                     </div>
-                    <div class="video-info">
-                        <div class="video-title">${vid.Title || vid.Name}</div>
-                    </div>
-                    <div class="download-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    </div>
+                    <div class="video-info">${v.Title || v.Name}</div>
+                    <div class="dl-icon">📥</div>
                 `;
-                container.appendChild(div);
+                list.appendChild(item);
             });
         }
 
-        function toggleVideos() {
-            showingAll = !showingAll;
-            document.getElementById('toggleText').innerText = showingAll ? "View less" : "View all";
-            document.getElementById('toggleIcon').classList.toggle('rotate');
+        function toggleVideoView() {
+            isShowingAll = !isShowingAll;
+            document.getElementById('toggleText').innerText = isShowingAll ? "View less" : "View all";
             renderVideos();
         }
 
-        function renderModules(modulesMap) {
-            const container = document.getElementById('modulesList');
-            if (!modulesMap) return;
-
-            Object.entries(modulesMap).forEach(([key, url]) => {
-                const card = document.createElement('div');
-                card.className = 'module-card';
-                card.onclick = () => window.open(url, '_blank');
-                card.innerHTML = `
-                    <div class="module-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    </div>
-                    <div class="module-title">${key}</div>
-                    <div class="module-actions">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
+        function renderModules(modules) {
+            const list = document.getElementById('modulesList');
+            if (!modules) return;
+            Object.entries(modules).forEach(([name, url]) => {
+                const div = document.createElement('div');
+                div.className = 'module-card';
+                div.onclick = () => window.open(url, '_blank');
+                div.innerHTML = `
+                    <div class="icon-circle">📖</div>
+                    <div class="module-text">${name}</div>
+                    <div style="color:#999">🔗</div>
                 `;
-                container.appendChild(card);
+                list.appendChild(div);
             });
         }
     </script>
 </body>
-  </html>
+</html>
